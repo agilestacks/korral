@@ -1,0 +1,29 @@
+{
+  "extends": [
+    "airbnb-base"
+  ],
+  "rules": {
+    "class-methods-use-this": "off",
+    "comma-dangle": ["error", "never"],
+    "eqeqeq": ["error", "smart"],
+    "func-style": ["error", "declaration", {"allowArrowFunctions": true}],
+    "indent": ["error", 4, { "SwitchCase": 1 }],
+    "max-len": ["error", 120],
+    "no-param-reassign": ["error", {"props": true, "ignorePropertyModificationsFor": ["ctx", "acc"]}],
+    "object-curly-spacing": ["error", "never"],
+    "operator-linebreak": ["error", "before", { "overrides": { "=": "none", "?": "ignore", ":": "ignore", "||": "ignore" } }],
+    "space-before-function-paren": ["error", {
+      "named": "never",
+      "asyncArrow": "always"
+    }],
+    "object-curly-newline": "off",
+    "function-paren-newline": "off",
+    "prefer-promise-reject-errors": "off",
+    "arrow-parens": ["error", "as-needed", { "requireForBlockBody": true }],
+    "max-classes-per-file": "off"
+  },
+  "env": {
+    "node": true,
+    "es6": true
+  }
+}
