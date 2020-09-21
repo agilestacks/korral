@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-const {get, round, sum, toNumber} = require('lodash');
+const {get, difference, round, sum, toNumber} = require('lodash');
 
 function join(cluster, cloud, prices) {
     const nodesPrices = cluster.nodes.map(({name, id: instId, instanceType, zone, volumes}) => {
@@ -14,8 +14,11 @@ function join(cluster, cloud, prices) {
             .find(({instanceType: priceInstanceType}) => priceInstanceType === cloudInstanceType);
         nodePrice = toNumber(nodePrice);
 
-        const volumesPrice = sum(volumes.map((volId) => {
-            const volumeId = volId.split('/')[3];
+        const k8sVolumes = volumes.map(id => id.split('/')[3]);
+        const nativeVolumes = cloud.volumes
+            .filter(({attachments}) => attachments.includes(instanceId))
+            .map(({id}) => id);
+        const volumesPrice = sum(k8sVolumes.concat(difference(nativeVolumes, k8sVolumes)).map((volumeId) => {
             const {type, size, attachments} = cloud.volumes.find(({id: cloudId}) => cloudId === volumeId);
             const volumePrice = (prices.volume[type] * size) / (30 * 24);
             if (!attachments.includes(instanceId)) {
