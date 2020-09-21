@@ -3,7 +3,11 @@ const {flatMap} = require('lodash');
 async function instances(ec2) {
     const {Reservations: r} = await ec2.describeInstances().promise();
     const cloudVms = flatMap(r, ({Instances: i}) => i.map(({
-        InstanceId: id, InstanceType: instanceType, PrivateDnsName: name, VpcId: vpc, InstanceLifecycle: lifecycle
+        InstanceId: id,
+        InstanceType: instanceType,
+        PrivateDnsName: name,
+        VpcId: vpc,
+        InstanceLifecycle: lifecycle = 'ondemand'
     }) => ({name, id, instanceType, vpc, lifecycle})));
     return cloudVms;
 }
