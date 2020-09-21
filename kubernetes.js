@@ -38,7 +38,7 @@ async function loadBalancers(k8sApi) {
     const lbs = n.filter(({spec: {type}}) => type === 'LoadBalancer');
     const ingress = flatMap(lbs, lb => get(lb, 'status.loadBalancer.ingress'));
     const hostnames = ingress.map(({hostname}) => hostname);
-    return hostnames;
+    return hostnames.map(hostname => ({hostname, type: 'elb'}));
 }
 
 async function volumes(k8sApi) {

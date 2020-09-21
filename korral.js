@@ -7,12 +7,12 @@ const k8s = require('@kubernetes/client-node');
 
 const {meta: kMeta, nodes: kNodes, loadBalancers: kLoadBalancers, volumes: kVolumes} = require('./kubernetes');
 const {instances: cInstances, volumes: cVolumes} = require('./cloud');
-const {spotPrices, ondemandPrices, volumePrices} = require('./prices');
+const {spotPrices, ondemandPrices, loadBalancerPrices, volumePrices, eksPrices} = require('./prices');
 const {join} = require('./model');
 
 function kubeKind(cluster) {
     const {meta: {version}} = cluster;
-    const kind = (version.gitVersion || '').includes('-eks-') ? 'EKS' : 'generic';
+    const kind = (version.gitVersion || '').includes('-eks-') ? 'eks' : 'generic';
     return {kind};
 }
 
@@ -59,12 +59,14 @@ async function main() {
     const cloud = {instances: cinst, volumes: cvol};
     dump({cloud});
 
-    const [spot, ondemand, pvol] = await Promise.all([
+    const [spot, ondemand, plbs, pvol, eks] = await Promise.all([
         spotPrices(region, zones, instanceTypes),
         ondemandPrices(region, instanceTypes),
-        volumePrices(region)
+        loadBalancerPrices(region),
+        volumePrices(region),
+        eksPrices()
     ]);
-    const prices = {spot, ondemand, volumes: pvol};
+    const prices = {spot, ondemand, loadBalancer: plbs, volume: pvol, k8s: eks};
     dump({prices});
 
     const costs = join(cluster, cloud, prices);

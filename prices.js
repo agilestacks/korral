@@ -18,10 +18,10 @@ async function zoneSpotPrices(ec2, zone, instanceTypes) {
     const {SpotPriceHistory} = await ec2.describeSpotPriceHistory(params).promise();
     const prices = SpotPriceHistory.map(({
         InstanceType: instanceType,
-        SpotPrice: spotPrice
+        SpotPrice: price
     }) => ({
         instanceType,
-        spotPrice
+        price
     }));
     return prices;
 }
@@ -44,16 +44,23 @@ async function ondemandPrices(region, instanceTypes) {
         const {prices: raw} = JSON.parse(body);
         prices = raw.filter(({unit}) => unit === 'Hrs')
             .map(({
-                price: {USD: ondemandPrice},
+                price: {USD: price},
                 attributes: {'aws:ec2:instanceType': instanceType}
             }) => ({
                 instanceType,
-                ondemandPrice
+                price
             }));
         fs.writeFileSync(filename, JSON.stringify(prices));
     }
     prices = prices.filter(({instanceType}) => instanceTypes.includes(instanceType));
     return prices;
+}
+
+async function loadBalancerPrices(region) {
+    // TODO proper ELB pricing
+    return region.startsWith('us') ?
+        {elb: 0.0225} :
+        {elb: 0.027};
 }
 
 async function volumePrices(region) {
@@ -63,4 +70,8 @@ async function volumePrices(region) {
         {gp2: 0.12, st1: 0.054};
 }
 
-module.exports = {spotPrices, ondemandPrices, volumePrices};
+async function eksPrices() {
+    return {eks: 0.10};
+}
+
+module.exports = {spotPrices, ondemandPrices, loadBalancerPrices, volumePrices, eksPrices};
