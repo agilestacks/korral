@@ -2,11 +2,11 @@
 const util = require('util');
 const {get, flatMap, uniq} = require('lodash');
 const k8s = require('@kubernetes/client-node');
-const request = require('request'); // eslint-disable-line import/no-extraneous-dependencies
+const request = require('request');
 const aws = require('aws-sdk');
 const awsConfig = require('aws-config');
 
-// const prices = require('./prices');
+const {spotPrices, ondemandPrices, volumePrices} = require('./prices');
 
 const kc = new k8s.KubeConfig();
 kc.loadFromDefault();
@@ -34,7 +34,7 @@ async function nodes() {
     }) => ({
         name,
         id,
-        type: labels['node.kubernetes.io/instance-type'],
+        instanceType: labels['node.kubernetes.io/instance-type'],
         region: labels['topology.kubernetes.io/region'],
         zone: labels['topology.kubernetes.io/zone'],
         volumes: volumesInUse.filter(vol => vol.startsWith('kubernetes.io/aws-ebs/')).map(vol => vol.substr(22))
@@ -56,22 +56,29 @@ async function kvolumes() {
     return volumeIds;
 }
 
-function guessKubeKind(cluster) {
+function kubeKind(cluster) {
     const {meta: {version}} = cluster;
     const kind = (version.gitVersion || '').includes('-eks-') ? 'EKS' : 'generic';
     return {kind};
 }
 
-function enrich(cluster) {
-    Object.assign(cluster.meta, guessKubeKind(cluster));
-    const regions = uniq(cluster.nodes.map(({region}) => region));
+function cloudProperties(cluster) {
+    const {nodes} = cluster;
+    const regions = uniq(nodes.map(({region}) => region));
     if (regions.length > 0) {
         const [region] = regions;
-        cluster.meta.region = region;
+        const zones = uniq(nodes.map(({zone}) => zone));
+        const instanceTypes = uniq(nodes.map(({instanceType}) => instanceType));
+        return {region, zones, instanceTypes};
     }
     if (regions.length !== 1) {
         console.log(`Expected cluster nodes in a single cloud region: got ${regions}`);
     }
+}
+
+function enrich(cluster) {
+    Object.assign(cluster.meta, kubeKind(cluster));
+    Object.assign(cluster.meta, cloudProperties(cluster));
 }
 
 let ec2;
@@ -103,16 +110,32 @@ function dump(obj) {
 }
 
 async function main() {
-    const [m, n, l, v] = await Promise.all([kmeta(), nodes(), lbs(), kvolumes()]);
-    const cluster = {meta: m, nodes: n, loadBalancers: l, volumes: v};
+    const [meta, knodes, loadBalancers, kvol] = await Promise.all([kmeta(), nodes(), lbs(), kvolumes()]);
+    const cluster = {meta, nodes: knodes, loadBalancers, volumes: kvol};
     enrich(cluster);
     dump({cluster});
+    // const cluster =  {
+    //     meta: {
+    //       kind: 'EKS',
+    //       region: 'us-east-2',
+    //       zones: [ 'us-east-2c', 'us-east-2a' ],
+    //       instanceTypes: [ 't3a.medium', 'r4.large' ]
+    //     }
+    // };
+    const {meta: {region, zones, instanceTypes}} = cluster;
+    ec2 = new aws.EC2(awsConfig({region}));
 
-    ec2 = new aws.EC2(awsConfig({region: cluster.meta.region}));
-
-    const [i, c] = await Promise.all([vms(), cvolumes()]);
-    const cloud = {vms: i, volumes: c};
+    const [cvms, cvol] = await Promise.all([vms(), cvolumes()]);
+    const cloud = {instances: cvms, volumes: cvol};
     dump({cloud});
+
+    const [spot, ondemand, pvol] = await Promise.all([
+        spotPrices(region, zones, instanceTypes),
+        ondemandPrices(region, instanceTypes),
+        volumePrices(region)
+    ]);
+    const prices = {spot, ondemand, volumes: pvol};
+    dump({prices});
 }
 
 main();
