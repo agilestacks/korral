@@ -1,60 +1,14 @@
-/* eslint-disable no-console, no-param-reassign */
+/* eslint-disable no-console */
 const util = require('util');
-const {get, flatMap, uniq} = require('lodash');
-const k8s = require('@kubernetes/client-node');
-const request = require('request');
+const {uniq} = require('lodash');
 const aws = require('aws-sdk');
 const awsConfig = require('aws-config');
+const k8s = require('@kubernetes/client-node');
 
+const {meta: kMeta, nodes: kNodes, loadBalancers: kLoadBalancers, volumes: kVolumes} = require('./kubernetes');
+const {instances: cInstances, volumes: cVolumes} = require('./cloud');
 const {spotPrices, ondemandPrices, volumePrices} = require('./prices');
-
-const kc = new k8s.KubeConfig();
-kc.loadFromDefault();
-const k8sApi = kc.makeApiClient(k8s.CoreV1Api);
-
-async function kmeta() {
-    const opt = {
-        method: 'GET',
-        baseUrl: k8sApi.basePath,
-        uri: '/version',
-        headers: {}
-    };
-    await k8sApi.authentications.default.applyToRequest(opt);
-    const {body} = await util.promisify(request)(opt);
-    const version = JSON.parse(body);
-    return {version};
-}
-
-async function nodes() {
-    const {body: {items: n}} = await k8sApi.listNode();
-    const cloudNodes = n.map(({
-        metadata: {name, labels},
-        spec: {providerID: id},
-        status: {volumesInUse}
-    }) => ({
-        name,
-        id,
-        instanceType: labels['node.kubernetes.io/instance-type'],
-        region: labels['topology.kubernetes.io/region'],
-        zone: labels['topology.kubernetes.io/zone'],
-        volumes: volumesInUse.filter(vol => vol.startsWith('kubernetes.io/aws-ebs/')).map(vol => vol.substr(22))
-    }));
-    return cloudNodes;
-}
-
-async function lbs() {
-    const {body: {items: n}} = await k8sApi.listServiceForAllNamespaces();
-    const loadBalancers = n.filter(({spec: {type}}) => type === 'LoadBalancer');
-    const ingress = flatMap(loadBalancers, lb => get(lb, 'status.loadBalancer.ingress'));
-    const hostnames = ingress.map(({hostname}) => hostname);
-    return hostnames;
-}
-
-async function kvolumes() {
-    const {body: {items: n}} = await k8sApi.listPersistentVolume();
-    const volumeIds = n.map(({spec: {awsElasticBlockStore: {volumeID}}}) => volumeID);
-    return volumeIds;
-}
+const {join} = require('./model');
 
 function kubeKind(cluster) {
     const {meta: {version}} = cluster;
@@ -74,6 +28,7 @@ function cloudProperties(cluster) {
     if (regions.length !== 1) {
         console.log(`Expected cluster nodes in a single cloud region: got ${regions}`);
     }
+    return {};
 }
 
 function enrich(cluster) {
@@ -81,52 +36,27 @@ function enrich(cluster) {
     Object.assign(cluster.meta, cloudProperties(cluster));
 }
 
-let ec2;
-
-async function vms() {
-    const {Reservations: r} = await ec2.describeInstances().promise();
-    const cloudVms = flatMap(r, ({Instances: i}) => i.map(({
-        InstanceId: id, InstanceType: type, PrivateDnsName: name, VpcId: vpc, InstanceLifecycle: lifecycle
-    }) => ({name, id, type, vpc, lifecycle})));
-    return cloudVms;
-}
-
-async function cvolumes() {
-    const {Volumes: v} = await ec2.describeVolumes().promise();
-    const cloudVolumes = v.map(({
-        VolumeId: id, VolumeType: type, Size, AvailabilityZone: zone, Attachments
-    }) => ({
-        id,
-        type,
-        size: `${Size}GB`,
-        zone,
-        attachments: Attachments.map(({InstanceId}) => InstanceId)
-    }));
-    return cloudVolumes;
-}
-
 function dump(obj) {
     console.log(util.inspect(obj, {depth: 5, showHidden: false}));
 }
 
 async function main() {
-    const [meta, knodes, loadBalancers, kvol] = await Promise.all([kmeta(), nodes(), lbs(), kvolumes()]);
-    const cluster = {meta, nodes: knodes, loadBalancers, volumes: kvol};
+    const kc = new k8s.KubeConfig();
+    kc.loadFromDefault();
+    const k8sApi = kc.makeApiClient(k8s.CoreV1Api);
+
+    const [meta, knodes, klbs, kvol] = await Promise.all([
+        kMeta(k8sApi), kNodes(k8sApi), kLoadBalancers(k8sApi), kVolumes(k8sApi)]);
+    const cluster = {meta, nodes: knodes, loadBalancers: klbs, volumes: kvol};
     enrich(cluster);
     dump({cluster});
-    // const cluster =  {
-    //     meta: {
-    //       kind: 'EKS',
-    //       region: 'us-east-2',
-    //       zones: [ 'us-east-2c', 'us-east-2a' ],
-    //       instanceTypes: [ 't3a.medium', 'r4.large' ]
-    //     }
-    // };
-    const {meta: {region, zones, instanceTypes}} = cluster;
-    ec2 = new aws.EC2(awsConfig({region}));
 
-    const [cvms, cvol] = await Promise.all([vms(), cvolumes()]);
-    const cloud = {instances: cvms, volumes: cvol};
+    const {meta: {region, zones, instanceTypes}} = cluster;
+
+    const ec2 = new aws.EC2(awsConfig({region}));
+
+    const [cinst, cvol] = await Promise.all([cInstances(ec2), cVolumes(ec2)]);
+    const cloud = {instances: cinst, volumes: cvol};
     dump({cloud});
 
     const [spot, ondemand, pvol] = await Promise.all([
@@ -136,6 +66,9 @@ async function main() {
     ]);
     const prices = {spot, ondemand, volumes: pvol};
     dump({prices});
+
+    const costs = join(cluster, cloud, prices);
+    dump({costs});
 }
 
 main();

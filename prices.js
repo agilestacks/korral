@@ -60,7 +60,7 @@ async function volumePrices(region) {
     // TODO proper EBS pricing
     return region.startsWith('us') ?
         {gp2: 0.10, st1: 0.045} :
-        {gp2: 0.12, st1: 0.054}
+        {gp2: 0.12, st1: 0.054};
 }
 
 module.exports = {spotPrices, ondemandPrices, volumePrices};
