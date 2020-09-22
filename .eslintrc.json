@@ -20,7 +20,8 @@
     "function-paren-newline": "off",
     "prefer-promise-reject-errors": "off",
     "arrow-parens": ["error", "as-needed", { "requireForBlockBody": true }],
-    "max-classes-per-file": "off"
+    "max-classes-per-file": "off",
+    "no-console": "off"
   },
   "env": {
     "node": true,

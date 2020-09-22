@@ -1,4 +1,3 @@
-/* eslint-disable no-console, no-param-reassign */
 const util = require('util');
 const request = require('request');
 const {get, flatMap} = require('lodash');

@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 const {get, difference, round, sum, toNumber} = require('lodash');
 
 function join(cluster, cloud, prices) {
