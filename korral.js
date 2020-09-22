@@ -5,6 +5,7 @@ const aws = require('aws-sdk');
 const awsConfig = require('aws-config');
 const k8s = require('@kubernetes/client-node');
 
+const {parseArgs, defaultConfig} = require('./cli');
 const {meta: kMeta, nodes: kNodes, loadBalancers: kLoadBalancers, volumes: kVolumes} = require('./kubernetes');
 const {instances: cInstances, volumes: cVolumes} = require('./cloud');
 const {spotPrices, ondemandPrices, loadBalancerPrices, volumePrices, eksPrices} = require('./prices');
@@ -36,14 +37,18 @@ function enrich(cluster) {
     Object.assign(cluster.meta, cloudProperties(cluster));
 }
 
-function dump(obj) {
-    console.log(util.inspect(obj, {depth: 5, showHidden: false}));
-}
+let dump = obj => console.log(util.inspect(obj, {depth: 5, showHidden: false}));
 
 async function main() {
+    const {argv, opts} = defaultConfig(parseArgs());
+    if (!opts.debug) dump = () => {};
+
     const kc = new k8s.KubeConfig();
     kc.loadFromDefault();
+    if (opts.context) kc.setCurrentContext(opts.context);
     const k8sApi = kc.makeApiClient(k8s.CoreV1Api);
+
+    const command = argv[0];
 
     const [meta, knodes, klbs, kvol] = await Promise.all([
         kMeta(k8sApi), kNodes(k8sApi), kLoadBalancers(k8sApi), kVolumes(k8sApi)]);
