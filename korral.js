@@ -12,6 +12,7 @@ async function main() {
     const kc = new k8s.KubeConfig();
     kc.loadFromDefault();
     if (opts.context) kc.setCurrentContext(opts.context);
+    else opts.context = kc.getCurrentContext();
     const k8sApi = kc.makeApiClient(k8s.CoreV1Api);
 
     const command = argv[0];

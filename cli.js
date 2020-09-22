@@ -7,7 +7,7 @@ Print cluster cost:
     korral print
 
 Push cluster cost metrics to SuperHub Metrics Service:
-    korral push [--interval=60] [--endpoint=https://api.superhub.io]
+    korral push [--interval=60] [--endpoint=https://api.superhub.io] [--key=$METRICS_API_SECRET]
 
 *not implemented* Expose cluster cost metrics over HTTP in Prometheus format:
     korral expose [--interval=60] [--port=8005]
@@ -18,7 +18,7 @@ Push cluster cost metrics to SuperHub Metrics Service:
 function parseArgs() {
     const known = ['print', 'push', 'expose',
         'debug', 'trace', 'help',
-        'context', 'interval', 'endpoint', 'port'];
+        'context', 'interval', 'endpoint', 'key', 'port'];
     const argv = [];
     const opts = {};
     process.argv.slice(2).forEach((arg) => {
@@ -46,6 +46,7 @@ function defaultConfig({argv, opts}) {
             endpoint: process.env.HUB_API || 'https://api.superhub.io',
             interval: '60',
             port: '8005',
+            key: process.env.METRICS_API_SECRET,
             ...opts
         }
     };
