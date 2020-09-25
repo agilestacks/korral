@@ -3,14 +3,14 @@ const {get, difference, round, sum, toNumber} = require('lodash');
 function join(cluster, cloud, prices) {
     const nodesPrices = cluster.nodes.map(({name, id: instId, instanceType, zone, volumes}) => {
         const instanceId = instId.split('/')[4];
-        const {instanceType: cloudInstanceType, lifecycle} = cloud.instances.find(
-            ({id: cloudId}) => cloudId === instanceId);
+        const {instanceType: cloudInstanceType, lifecycle = 'ondemand'} = cloud.instances.find(
+            ({id: cloudId}) => cloudId === instanceId) || {};
         if (instanceType !== cloudInstanceType) {
             console.log(
                 `Instance ${instanceId} type is ${cloudInstanceType}, but listed as ${instanceType} in Kubernetes`);
         }
         let {price: nodePrice} = (lifecycle === 'spot' ? prices.spot[zone] : prices.ondemand)
-            .find(({instanceType: priceInstanceType}) => priceInstanceType === cloudInstanceType);
+            .find(({instanceType: priceInstanceType}) => priceInstanceType === (cloudInstanceType || instanceType));
         nodePrice = toNumber(nodePrice);
 
         const k8sVolumes = volumes.map(id => id.split('/')[3]);
@@ -18,7 +18,8 @@ function join(cluster, cloud, prices) {
             .filter(({attachments}) => attachments.includes(instanceId))
             .map(({id}) => id);
         const volumesPrice = sum(k8sVolumes.concat(difference(nativeVolumes, k8sVolumes)).map((volumeId) => {
-            const {type, size, attachments} = cloud.volumes.find(({id: cloudId}) => cloudId === volumeId);
+            const {type = 'gp2', size = 0, attachments = []} =
+                cloud.volumes.find(({id: cloudId}) => cloudId === volumeId) || {};
             const volumePrice = (prices.volume[type] * size) / (30 * 24);
             if (!attachments.includes(instanceId)) {
                 console.log(
