@@ -10,11 +10,11 @@ async function scrape(init) {
     const {k8s} = totals;
 
     const nodesCost = nodes.map(
-        ({name, node}) => `korral_cluster_node_cost_dollars{node=${name}} ${node}`);
+        ({name, node}) => `korral_cluster_node_cost_dollars{node="${name}"} ${node}`);
     const volumesCost = nodes.map(
-        ({name, volumes}) => `korral_cluster_node_volumes_cost_dollars{node=${name}} ${volumes}`);
+        ({name, volumes}) => `korral_cluster_node_volumes_cost_dollars{node="${name}"} ${volumes}`);
     const lbsCost = loadBalancers.map(
-        ({hostname, total}) => `korral_cluster_loadbalancer_cost_dollars{hostname=${hostname}} ${total}`);
+        ({hostname, total}) => `korral_cluster_loadbalancer_cost_dollars{hostname="${hostname}"} ${total}`);
     const k8sCost = `korral_cluster_k8s_cost_dollars ${k8s > 0 ? k8s : 0}`;
 
     const prometheus = `
