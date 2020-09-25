@@ -47,7 +47,7 @@ function join(cluster, cloud, prices) {
     const k8sPrice = get(prices.k8s, cluster.meta.kind, 0);
     const nodesPrice = sum(nodesPrices.map(({node}) => node));
     const volumesPrice = sum(nodesPrices.map(({volumes}) => volumes));
-    const lbsPrice = sum(lbsPrices.map(({loadBalancer}) => loadBalancer));
+    const lbsPrice = sum(lbsPrices.map(({total}) => total));
     const totals = {
         total: round(nodesPrice + volumesPrice + lbsPrice + k8sPrice, 5),
         nodes: round(nodesPrice, 5),

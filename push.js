@@ -39,7 +39,7 @@ async function push(init) {
             console.log(`Expected 202 HTTP; got ${resp.status} ${resp.statusText}:\n${resp.data}`);
         }
         if (debug && resp && resp.status && resp.status === 202) {
-            console.log(`${resp.status} ${resp.statusText}`)
+            console.log(`${resp.status} ${resp.statusText}`);
         }
         await sleep(interval * 1000);
     }
