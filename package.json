@@ -2,8 +2,8 @@
   "name": "korral",
   "version": "0.0.1",
   "scripts": {
-    "start": "node korral.js",
-    "lint": "eslint *.js"
+    "start": "node --unhandled-rejections=strict src/korral.js",
+    "lint": "eslint src/*.js"
   },
   "dependencies": {
     "@kubernetes/client-node": "^0.12.0",

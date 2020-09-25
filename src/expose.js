@@ -3,12 +3,11 @@ const http = require('http');
 const {collect} = require('./collect');
 const {printTotals} = require('./print');
 
-async function scrape(init, print = false) {
+async function scrape(init) {
     const ctx = await collect(init);
 
     const {costs: {totals, nodes, loadBalancers}} = ctx;
     const {k8s} = totals;
-    if (print) printTotals(totals);
 
     const nodesCost = nodes.map(
         ({name, node}) => `korral_cluster_node_cost_dollars{node=${name}} ${node}`);
@@ -36,8 +35,14 @@ ${lbsCost.join('\n')}
 ${k8sCost}
 `;
 
-    if (print) console.log(prometheus);
     return {prometheus, ctx};
+}
+
+async function checkScrape(init) {
+    const {prometheus, ctx} = await scrape(init);
+    const {costs: {totals}} = ctx;
+    printTotals(totals);
+    console.log(prometheus);
 }
 
 function handler(path, init) {
@@ -68,7 +73,7 @@ function handler(path, init) {
 
 async function expose(ctx) {
     const {opts: {port, path, check}} = ctx;
-    if (check) await scrape(ctx, true);
+    if (check) await checkScrape(ctx);
     const server = http.createServer(handler(path, ctx));
     server.listen(port, () => { console.log(`Listening on port ${port}`); });
 }
