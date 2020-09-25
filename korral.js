@@ -16,7 +16,7 @@ async function main() {
     const k8sApi = kc.makeApiClient(k8s.CoreV1Api);
 
     const command = argv[0];
-    const commands = {print, push, expose};
+    const commands = {print, push, export: expose};
     await commands[command]({argv, opts, k8sApi, dump: opts.debug ? dump : noop});
 }
 
