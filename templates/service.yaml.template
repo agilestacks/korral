@@ -4,10 +4,9 @@ metadata:
   name: ${component.korral.name}
   namespace: ${component.korral.namespace}
   labels:
-    provider: agilestacks.com
-    project: korral
-    kubernetes.io/name: korral
-    kubernetes.io/cluster-service: "true"
+    app.kubernetes.io/name: korral
+    app.kubernetes.io/instance: ${component.korral.name}
+    app.kubernetes.io/component: exporter
 spec:
   ports:
   - name: http
@@ -15,6 +14,6 @@ spec:
     targetPort: 9797
     protocol: TCP
   selector:
-    provider: agilestacks.com
-    project: korral
-    qualifier: exporter
+    app.kubernetes.io/name: korral
+    app.kubernetes.io/instance: ${component.korral.name}
+    app.kubernetes.io/component: exporter
