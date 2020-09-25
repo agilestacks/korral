@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${component.korral.name}
+  namespace: ${component.korral.namespace}
+  labels:
+    provider: agilestacks.com
+    project: korral
+    qualifier: exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+        provider: agilestacks.com
+        project: korral
+        qualifier: exporter
+  template:
+    metadata:
+      name: ${component.korral.name}
+      namespace: ${component.korral.namespace}
+      labels:
+        provider: agilestacks.com
+        project: korral
+        qualifier: exporter
+    spec:
+      serviceAccountName: ${component.korral.name}
+      containers:
+      - name: exporter
+        image: ${component.korral.image}
+        imagePullPolicy: Always
+        env:
+        - name: KORRAL_PORT
+          value: "9797"
+        ports:
+        - name: http
+          containerPort: 9797
+        readinessProbe:
+          httpGet:
+            path: /ping
+            port: 9797
+        livenessProbe:
+          httpGet:
+            path: /ping
+            port: 9797
+          initialDelaySeconds: 60
+          periodSeconds: 60
+          timeoutSeconds: 5

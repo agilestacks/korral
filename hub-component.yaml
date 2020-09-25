@@ -1,0 +1,42 @@
+---
+version: 1
+kind: component
+meta:
+  name: korral
+  brief: Collect and export Kubernetes costs
+  source:
+    dir: ../api
+
+requires:
+- kubernetes
+
+lifecycle:
+  verbs:
+  - deploy
+  - undeploy
+
+parameters:
+- name: component.korral
+  parameters:
+  - name: namespace
+    value: monitoring
+    env: NAMESPACE
+  - name: name
+    value: korral
+  - name: image
+    env: IMAGE
+  - name: port
+    value: 9797
+- name: dns.domain
+  env: DOMAIN_NAME
+
+templates:
+  files:
+  - templates/*.template
+
+outputs:
+- name: component.korral.name
+- name: component.korral.namespace
+- name: component.korral.endpoint
+  brief: Korral Prometheus exporter endpoint
+  value: http://${component.korral.name}.${component.korral.namespace}.svc.cluster.local:${component.korral.port}/metrics

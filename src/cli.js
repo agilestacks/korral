@@ -49,7 +49,7 @@ function defaultConfig({argv, opts}) {
             endpoint: process.env.HUB_API || 'https://api.superhub.io',
             key: process.env.METRICS_API_SECRET,
             check: false,
-            port: '9797',
+            port: process.env.KORRAL_PORT || '9797',
             path: '/metrics',
             ...opts
         }

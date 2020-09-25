@@ -1,0 +1,35 @@
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: ${component.korral.name}
+  namespace: ${component.korral.namespace}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ${component.korral.name}
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  - persistentvolumes
+  - pods
+  - services
+  verbs:
+  - get
+  - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ${component.korral.name}
+  namespace: ${component.korral.namespace}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ${component.korral.name}
+subjects:
+- kind: ServiceAccount
+  name: ${component.korral.name}
+  namespace: ${component.korral.namespace}

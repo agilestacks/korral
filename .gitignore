@@ -1,2 +1,3 @@
 node_modules/
 aws-ondemand-prices-*.json
+templates/*.yaml

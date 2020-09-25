@@ -59,6 +59,8 @@ function handler(path, init) {
                     response.writeHead(200, {'content-type': 'text/plain'}).end(body);
                 } else if (requestPath === '/') {
                     response.writeHead(307, {location: path}).end();
+                } else if (requestPath === '/ping') {
+                    response.writeHead(200).end('pong');
                 } else {
                     response.writeHead(404).end();
                 }
