@@ -8,9 +8,11 @@ IMAGE         ?= $(REGISTRY)/agilestacks/$(DOMAIN_NAME)/korral
 IMAGE_VERSION ?= $(shell git rev-parse HEAD | colrm 7)
 NAMESPACE     ?= monitoring
 
-kubectl       ?= kubectl --context=$(DOMAIN_NAME) --namespace=$(NAMESPACE)
-docker        ?= docker
-aws           ?= aws
+kubectl ?= kubectl --context=$(DOMAIN_NAME) --namespace=$(NAMESPACE)
+docker  ?= docker
+aws     ?= aws
+
+deploy: build push kubernetes
 
 build:
 	@ $(docker) build -t $(IMAGE):$(IMAGE_VERSION) .
@@ -23,14 +25,16 @@ push:
 	$(docker) push $(IMAGE):latest
 .PHONY: push
 
-deploy: build push
+kubernetes:
 	-$(kubectl) create namespace $(NAMESPACE)
 	$(kubectl) apply -f templates/rbac.yaml
 	$(kubectl) apply -f templates/deployment.yaml
 	$(kubectl) apply -f templates/service.yaml
-.PHONY: deploy
+	-$(kubectl) apply -f templates/servicemonitor.yaml
+.PHONY: kubernetes
 
 undeploy:
+	-$(kubectl) delete -f templates/servicemonitor.yaml
 	-$(kubectl) delete -f templates/service.yaml
 	-$(kubectl) delete -f templates/deployment.yaml
 	-$(kubectl) delete -f templates/rbac.yaml

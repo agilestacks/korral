@@ -1,0 +1,23 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    # match Prometheus custom resource serviceMonitorSelector
+    release: ${component.prometheus.name}
+  name: ${component.korral.name}
+  namespace: ${component.korral.namespace}
+spec:
+  targetLabels:
+  - domain
+  endpoints:
+  - port: http
+    interval: "1m"
+    scrapeTimeout: "20s"
+  namespaceSelector:
+    matchNames:
+    - ${component.korral.namespace}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: korral
+      app.kubernetes.io/instance: ${component.korral.name}
+      app.kubernetes.io/component: exporter

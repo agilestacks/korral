@@ -3,7 +3,7 @@ version: 1
 kind: component
 meta:
   name: korral
-  brief: Collect and export Kubernetes costs
+  brief: Collect and export Kubernetes costs to Prometheus
   source:
     dir: ../api
 
@@ -14,8 +14,13 @@ lifecycle:
   verbs:
   - deploy
   - undeploy
+  - kubernetes
 
 parameters:
+- name: dns.domain
+  env: DOMAIN_NAME
+- name: component.prometheus.name
+  value: prometheus-operator
 - name: component.korral
   parameters:
   - name: namespace
@@ -27,8 +32,6 @@ parameters:
     env: IMAGE
   - name: port
     value: 9797
-- name: dns.domain
-  env: DOMAIN_NAME
 
 templates:
   files:
@@ -40,3 +43,5 @@ outputs:
 - name: component.korral.endpoint
   brief: Korral Prometheus exporter endpoint
   value: http://${component.korral.name}.${component.korral.namespace}.svc.cluster.local:${component.korral.port}/metrics
+- name: component.korral.prometheus.name
+  value: ${component.prometheus.name}

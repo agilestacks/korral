@@ -4,6 +4,7 @@ metadata:
   name: ${component.korral.name}
   namespace: ${component.korral.namespace}
   labels:
+    domain: ${dns.domain}
     app.kubernetes.io/name: korral
     app.kubernetes.io/instance: ${component.korral.name}
     app.kubernetes.io/component: exporter
