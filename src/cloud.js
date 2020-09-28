@@ -32,4 +32,10 @@ async function volumes(ec2) {
 // https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-cloudwatch-metrics.html
 // collect ConsumedLCUs, IPv6ProcessedBytes, ProcessedBytes
 
-module.exports = {instances, volumes};
+async function cloud(ec2) {
+    const [cinst, cvol] = await Promise.all([instances(ec2), volumes(ec2)]);
+    const account = {instances: cinst, volumes: cvol};
+    return account;
+}
+
+module.exports = {cloud, instances, volumes};

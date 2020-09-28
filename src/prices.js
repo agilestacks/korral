@@ -74,4 +74,16 @@ async function eksPrices() {
     return {eks: 0.10};
 }
 
-module.exports = {spotPrices, ondemandPrices, loadBalancerPrices, volumePrices, eksPrices};
+async function priceList({region, zones, instanceTypes}) {
+    const [spot, ondemand, plbs, pvol, eks] = await Promise.all([
+        spotPrices(region, zones, instanceTypes),
+        ondemandPrices(region, instanceTypes),
+        loadBalancerPrices(region),
+        volumePrices(region),
+        eksPrices()
+    ]);
+    const prices = {spot, ondemand, loadBalancer: plbs, volume: pvol, k8s: eks};
+    return prices;
+}
+
+module.exports = {prices: priceList, spotPrices, ondemandPrices, loadBalancerPrices, volumePrices, eksPrices};

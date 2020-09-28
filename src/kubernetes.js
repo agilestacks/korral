@@ -1,6 +1,6 @@
 const util = require('util');
 const request = require('request');
-const {get, flatMap} = require('lodash');
+const {get, flatMap, uniq} = require('lodash');
 
 async function meta(k8sApi) {
     const opt = {
@@ -100,4 +100,38 @@ async function pvclaims(k8sApi) {
     return kPvcs;
 }
 
-module.exports = {meta, nodes, loadBalancers, volumes, pvclaims, pods};
+function kubeKind(kcluster) {
+    const {meta: {version}} = kcluster;
+    const kind = (version.gitVersion || '').includes('-eks-') ? 'eks' : 'generic';
+    return {kind};
+}
+
+function cloudProperties(kcluster) {
+    const {nodes: knodes} = kcluster;
+    const regions = uniq(knodes.map(({region}) => region));
+    if (regions.length > 0) {
+        const [region] = regions;
+        const zones = uniq(knodes.map(({zone}) => zone));
+        const instanceTypes = uniq(knodes.map(({instanceType}) => instanceType));
+        return {region, zones, instanceTypes};
+    }
+    if (regions.length !== 1) {
+        console.log(`Expected cluster nodes in a single cloud region: got ${regions}`);
+    }
+    return {};
+}
+
+function enrich(kcluster) {
+    Object.assign(kcluster.meta, kubeKind(kcluster));
+    Object.assign(kcluster.meta, cloudProperties(kcluster));
+}
+
+async function cluster(k8sApi) {
+    const [kmeta, knodes, klbs, kvols, kpvcs, kpods] = await Promise.all([
+        meta(k8sApi), nodes(k8sApi), loadBalancers(k8sApi), volumes(k8sApi), pvclaims(k8sApi), pods(k8sApi)]);
+    const kCluster = {meta: kmeta, nodes: knodes, loadBalancers: klbs, volumes: kvols, pvclaims: kpvcs, pods: kpods};
+    enrich(kCluster);
+    return kCluster;
+}
+
+module.exports = {cluster, meta, nodes, loadBalancers, volumes, pvclaims, pods};
