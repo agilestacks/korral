@@ -40,8 +40,8 @@ async function printCObjects() {
 async function printPrices() {
     const awsPrices = await prices({
         region,
-        zones: `${region}a`,
-        instanceTypes: ['t3.medium', 'm5.large']
+        zones: [`${region}a`, `${region}b`],
+        instanceTypes: ['t3a.medium', 'm5.large']
     });
     dump(awsPrices);
 }
