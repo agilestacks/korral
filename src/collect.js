@@ -6,8 +6,8 @@ const {cloud: awsCloud} = require('./cloud');
 const {prices: awsPrices} = require('./prices');
 const {join} = require('./model');
 
-async function collect({k8sApi, ec2Api = null, dump}) {
-    const cluster = await kCluster(k8sApi);
+async function collect({k8sApi, ec2Api = null, dump}, kopts = {}) {
+    const cluster = await kCluster(k8sApi, kopts);
     dump({cluster});
 
     const {meta: {region, zones, instanceTypes}} = cluster;

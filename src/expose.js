@@ -1,21 +1,30 @@
 const http = require('http');
 
 const {collect} = require('./collect');
-const {printTotals} = require('./print');
+const {printTotals, printNamespaceTotals} = require('./print');
 
-async function scrape(init) {
-    const ctx = await collect(init);
+/* eslint-disable max-len */
+async function scrape(init, kopts) {
+    const ctx = await collect(init, kopts);
 
-    const {costs: {totals, nodes, loadBalancers}} = ctx;
+    const {costs: {totals, nodes, loadBalancers, orphanedVolumes, pods}} = ctx;
     const {k8s} = totals;
 
     const nodesCost = nodes.map(
         ({name, node}) => `korral_cluster_node_cost_per_hour_dollars{node="${name}"} ${node}`);
-    const volumesCost = nodes.map(
-        ({name, volumes}) => `korral_cluster_node_volumes_cost_per_hour_dollars{node="${name}"} ${volumes}`);
+    const nodeVolumesCost = nodes.map(
+        ({name, allVolumes}) => `korral_cluster_node_volumes_cost_per_hour_dollars{node="${name}"} ${allVolumes}`);
     const lbsCost = loadBalancers.map(
-        ({hostname, total}) => `korral_cluster_loadbalancer_cost_per_hour_dollars{hostname="${hostname}"} ${total}`);
+        ({hostname, loadBalancer}) => `korral_cluster_loadbalancer_cost_per_hour_dollars{hostname="${hostname}"} ${loadBalancer}`);
+    const lbsTrafficCost = loadBalancers.map(
+        ({hostname, traffic}) => `korral_cluster_loadbalancer_traffic_cost_per_hour_dollars{hostname="${hostname}"} ${traffic}`);
     const k8sCost = `korral_cluster_k8s_cost_per_hour_dollars ${k8s > 0 ? k8s : 0}`;
+    const orphanedVolumesCost = (orphanedVolumes.length > 0 ? orphanedVolumes : [{volumePrice: 0}]).map(
+        ({volumePrice, namespace = 'unknown', claim = 'unknown'}) => `korral_cluster_orphaned_volumes_cost_per_hour_dollars{claim_namespace="${namespace}",claim="${claim}"} ${volumePrice}`);
+    const podsCost = pods.map(
+        ({name, namespace, node, pod}) => `korral_cluster_pod_cost_per_hour_dollars{name="${name}",pod_namespace="${namespace}",node="${node}"} ${pod}`);
+    const podVolumesCost = pods.filter(({volumes}) => volumes).map(
+        ({name, namespace, node, volumes}) => `korral_cluster_pod_volumes_cost_per_hour_dollars{name="${name}",pod_namespace="${namespace}",node="${node}"} ${volumes}`);
 
     const prometheus = `
 # HELP korral_cluster_node_cost_dollars Cluster node cost without cost of attached volumes
@@ -24,24 +33,42 @@ ${nodesCost.join('\n')}
 
 # HELP korral_cluster_node_volumes_cost_dollars Cluster node attached volumes cost
 # TYPE korral_cluster_node_volumes_cost_dollars gauge
-${volumesCost.join('\n')}
+${nodeVolumesCost.join('\n')}
 
-# HELP korral_cluster_loadbalancer_cost_dollars Cluster loadbalancer cost
+# HELP korral_cluster_loadbalancer_cost_dollars Cluster loadbalancer cost without egress
 # TYPE korral_cluster_loadbalancer_cost_dollars gauge
 ${lbsCost.join('\n')}
+
+# HELP korral_cluster_loadbalancer_traffic_cost_per_hour_dollars Cluster loadbalancer ingress/egress and LCU cost
+# TYPE korral_cluster_loadbalancer_traffic_cost_per_hour_dollars gauge
+${lbsTrafficCost.join('\n')}
 
 # HELP korral_cluster_k8s_cost_dollars Cluster cloud provider cost
 # TYPE korral_cluster_k8s_cost_dollars gauge
 ${k8sCost}
+
+# HELP korral_cluster_orphaned_volumes_cost_per_hour_dollars Cluster orphaned volumes cost
+# TYPE korral_cluster_orphaned_volumes_cost_per_hour_dollars gauge
+${orphanedVolumesCost.join('\n')}
+
+# HELP korral_cluster_pod_cost_per_hour_dollars Pod cost without cost of attached volumes
+# TYPE korral_cluster_pod_cost_per_hour_dollars gauge
+${podsCost.join('\n')}
+
+# HELP korral_cluster_pod_volumes_cost_per_hour_dollars Pod volumes cost
+# TYPE korral_cluster_pod_volumes_cost_per_hour_dollars gauge
+${podVolumesCost.join('\n')}
 `;
 
     return {prometheus, ctx};
 }
+/* eslint-enable max-len */
 
 async function checkScrape(init) {
-    const {prometheus, ctx} = await scrape(init);
-    const {costs: {totals}} = ctx;
+    const {prometheus, ctx} = await scrape(init, {pods: true});
+    const {costs: {totals, namespaces}} = ctx;
     printTotals(totals);
+    if (namespaces) printNamespaceTotals(namespaces);
     console.log(prometheus);
 }
 
@@ -54,7 +81,7 @@ function handler(path, init) {
             console.log(`${method} ${requestPath}`);
             try {
                 if (requestPath === path) {
-                    const {prometheus: body, ctx} = await scrape(this.init);
+                    const {prometheus: body, ctx} = await scrape(this.init, {pods: true});
                     this.init = ctx;
                     response.writeHead(200, {'content-type': 'text/plain'}).end(body);
                 } else if (requestPath === '/') {

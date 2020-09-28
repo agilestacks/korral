@@ -38,9 +38,9 @@ async function nodes(k8sApi) {
 async function loadBalancers(k8sApi) {
     const {body: {items: n}} = await k8sApi.listServiceForAllNamespaces();
     const lbs = n.filter(({spec: {type}}) => type === 'LoadBalancer');
-    const ingress = flatMap(lbs, lb => get(lb, 'status.loadBalancer.ingress'));
-    const hostnames = ingress.map(({hostname}) => hostname);
-    return hostnames.map(hostname => ({hostname, type: 'elb'}));
+    const ingress = flatMap(lbs, ({metadata: {namespace}, status}) => get(status, 'loadBalancer.ingress')
+        .map(({hostname}) => ({hostname, namespace, type: 'elb'})));
+    return ingress;
 }
 
 async function volumes(k8sApi) {
@@ -50,14 +50,17 @@ async function volumes(k8sApi) {
         spec: {
             awsElasticBlockStore: {volumeID: id},
             capacity: {storage},
-            claimRef: {name: claimName, namespace}
+            claimRef
         }
-    }) => ({
-        id,
-        name,
-        storage,
-        claim: {name: claimName, namespace}
-    }));
+    }) => {
+        const {name: claimName, namespace} = claimRef || {};
+        return {
+            id,
+            name,
+            storage,
+            claim: claimName ? {name: claimName, namespace} : {}
+        };
+    });
     return kVolumes;
 }
 
@@ -126,9 +129,11 @@ function enrich(kcluster) {
     Object.assign(kcluster.meta, cloudProperties(kcluster));
 }
 
-async function cluster(k8sApi) {
-    const [kmeta, knodes, klbs, kvols, kpvcs, kpods] = await Promise.all([
-        meta(k8sApi), nodes(k8sApi), loadBalancers(k8sApi), volumes(k8sApi), pvclaims(k8sApi), pods(k8sApi)]);
+async function cluster(k8sApi, opts = {}) {
+    const {pods: readPods} = opts;
+    const objs = [meta, nodes, loadBalancers, volumes];
+    if (readPods) objs.push(...[pvclaims, pods]);
+    const [kmeta, knodes, klbs, kvols, kpvcs = [], kpods = []] = await Promise.all(objs.map(getter => getter(k8sApi)));
     const kCluster = {meta: kmeta, nodes: knodes, loadBalancers: klbs, volumes: kvols, pvclaims: kpvcs, pods: kpods};
     enrich(kCluster);
     return kCluster;

@@ -11,6 +11,7 @@
     "aws-sdk": "^2.754.0",
     "axios": "^0.20.0",
     "js-yaml": "^3.14.0",
+    "kubernetes-resource-parser": "^0.1.0",
     "lodash": "^4.17.20",
     "moment": "^2.28.0",
     "request": "^2.88.2"

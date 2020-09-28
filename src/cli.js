@@ -4,7 +4,7 @@ function usage(code = 1) {
     console.log(`Usage: korral [--help] [--context=<context>] [--debug] [--trace] <command>
 
 Print cluster cost:
-    korral print
+    korral print [--namespaces]
 
 Push cluster cost metrics to SuperHub Metrics Service:
     korral push [--interval=60] [--endpoint=https://api.superhub.io] [--key=$METRICS_API_SECRET]
@@ -20,6 +20,7 @@ function parseArgs() {
         'kobjects', 'cobjects', 'prices',
         'debug', 'trace', 'help',
         'context',
+        'namespaces',
         'interval', 'endpoint', 'key',
         'check', 'port', 'path'];
     const argv = [];
@@ -46,6 +47,7 @@ function defaultConfig({argv, opts}) {
     return {
         argv: isEmpty(argv) ? ['print'] : argv,
         opts: {
+            namespaces: false,
             interval: '60',
             endpoint: process.env.HUB_API || 'https://api.superhub.io',
             key: process.env.METRICS_API_SECRET,
