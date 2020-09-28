@@ -17,6 +17,7 @@ Export cluster cost metrics over HTTP in Prometheus format:
 
 function parseArgs() {
     const known = ['print', 'push', 'export',
+        'kobjects', 'cobjects', 'prices',
         'debug', 'trace', 'help',
         'context',
         'interval', 'endpoint', 'key',

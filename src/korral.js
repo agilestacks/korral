@@ -2,7 +2,7 @@ const k8s = require('@kubernetes/client-node');
 
 const {dump, noop} = require('./util');
 const {parseArgs, defaultConfig} = require('./cli');
-const {print} = require('./print');
+const {print, printKObjects: kobjects, printCObjects: cobjects, printPrices: prices} = require('./print');
 const {push} = require('./push');
 const {expose} = require('./expose');
 
@@ -16,7 +16,7 @@ async function main() {
     const k8sApi = kc.makeApiClient(k8s.CoreV1Api);
 
     const command = argv[0];
-    const commands = {print, push, export: expose};
+    const commands = {print, push, export: expose, kobjects, cobjects, prices};
     await commands[command]({argv, opts, k8sApi, dump: opts.debug ? dump : noop});
 }
 
