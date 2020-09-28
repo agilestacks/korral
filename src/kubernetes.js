@@ -45,8 +45,59 @@ async function loadBalancers(k8sApi) {
 
 async function volumes(k8sApi) {
     const {body: {items: n}} = await k8sApi.listPersistentVolume();
-    const volumeIds = n.map(({spec: {awsElasticBlockStore: {volumeID}}}) => volumeID);
-    return volumeIds;
+    const kVolumes = n.map(({
+        metadata: {name},
+        spec: {
+            awsElasticBlockStore: {volumeID: id},
+            capacity: {storage},
+            claimRef: {name: claimName, namespace}
+        }
+    }) => ({
+        id,
+        name,
+        storage,
+        claim: {name: claimName, namespace}
+    }));
+    return kVolumes;
 }
 
-module.exports = {meta, nodes, loadBalancers, volumes};
+async function pods(k8sApi) {
+    const {body: {items: n}} = await k8sApi.listPodForAllNamespaces();
+    const kPods = n.map(({
+        metadata: {name, namespace},
+        spec: {
+            nodeName,
+            containers,
+            volumes: podVolumes
+        },
+        status: {phase}
+    }) => ({
+        name,
+        namespace,
+        phase,
+        nodeName,
+        containers: containers
+            .map(({name: containerName, resources = {}}) => ({name: containerName, resources})),
+        volumes: podVolumes
+            .filter(({persistentVolumeClaim}) => persistentVolumeClaim)
+            .map(({name: volumeName, persistentVolumeClaim: {claimName}}) => ({name: volumeName, claimName}))
+    }));
+    return kPods.filter(({phase}) => phase === 'Running');
+}
+
+async function pvclaims(k8sApi) {
+    const {body: {items: n}} = await k8sApi.listPersistentVolumeClaimForAllNamespaces();
+    const kPvcs = n.map(({
+        metadata: {name, namespace},
+        spec: {volumeName},
+        status: {capacity: {storage}}
+    }) => ({
+        name,
+        namespace,
+        volumeName,
+        storage
+    }));
+    return kPvcs;
+}
+
+module.exports = {meta, nodes, loadBalancers, volumes, pvclaims, pods};
