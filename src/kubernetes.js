@@ -24,9 +24,12 @@ async function nodes(k8sApi) {
     }) => ({
         name,
         id,
-        instanceType: labels['node.kubernetes.io/instance-type'],
-        region: labels['topology.kubernetes.io/region'],
-        zone: labels['topology.kubernetes.io/zone'],
+        instanceType: labels['node.kubernetes.io/instance-type'] ||
+            labels['beta.kubernetes.io/instance-type'],
+        region: labels['topology.kubernetes.io/region'] ||
+            labels['failure-domain.beta.kubernetes.io/region'],
+        zone: labels['topology.kubernetes.io/zone'] ||
+            labels['failure-domain.beta.kubernetes.io/zone'],
         volumes: (volumesInUse || []).filter(vol => vol.startsWith('kubernetes.io/aws-ebs/')).map(vol => vol.substr(22))
     }));
     return kNodes;
