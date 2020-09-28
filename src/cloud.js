@@ -26,4 +26,10 @@ async function volumes(ec2) {
     return cloudVolumes;
 }
 
+// TODO given lifetime of a load-balancer and pricing, calculate hourly cost (probably, over last 24h only)
+// https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_DescribeLoadBalancers.html
+// collect CreatedTime, DNSName, LoadBalancerArn
+// https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-cloudwatch-metrics.html
+// collect ConsumedLCUs, IPv6ProcessedBytes, ProcessedBytes
+
 module.exports = {instances, volumes};
