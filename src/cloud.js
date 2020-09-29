@@ -1,5 +1,6 @@
 const aws = require('aws-sdk');
 const awsConfig = require('aws-config');
+const moment = require('moment');
 const {flatMap, fromPairs, sumBy, toPairs} = require('lodash');
 
 function awsServices(region) {
@@ -36,12 +37,27 @@ async function volumes({ec2}) {
     return cloudVolumes;
 }
 
-// TODO given lifetime of a load-balancer and pricing, calculate hourly cost (probably, over last 24h only)
-// https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_DescribeLoadBalancers.html
-// collect CreatedTime, DNSName, LoadBalancerArn
-// https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-cloudwatch-metrics.html
-// collect ConsumedLCUs, IPv6ProcessedBytes, ProcessedBytes
 async function loadBalancers({elb, cloudwatch}, filter = null) {
+    const {LoadBalancerDescriptions: l} = await elb.describeLoadBalancers().promise();
+    const period = 24; // hours
+    const params = {
+        Namespace: 'AWS/ELB',
+        MetricName: 'EstimatedProcessedBytes',
+        StartTime: moment.utc().subtract(period, 'h').format(),
+        EndTime: moment.utc().format(),
+        Period: period * 3600,
+        Statistics: ['Sum'],
+        Unit: 'Bytes'
+    };
+    const lbs = await Promise.all(l.filter(filter || (() => true)).map(async ({DNSName, LoadBalancerName}) => {
+        const {Datapoints: d} = await cloudwatch.getMetricStatistics(
+            {...params, Dimensions: [{Name: 'LoadBalancerName', Value: LoadBalancerName}]}).promise();
+        return {
+            dnsName: DNSName,
+            bytes: Math.floor(sumBy(d, 'Sum') / period)
+        };
+    }));
+    return lbs;
 }
 
 async function cloud(services, filters = {}) {

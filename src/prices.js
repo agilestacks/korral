@@ -59,8 +59,8 @@ async function ondemandPrices(region, instanceTypes) {
 async function loadBalancerPrices(region) {
     // TODO proper ELB pricing
     return region.startsWith('us') ?
-        {elb: 0.0225} :
-        {elb: 0.027};
+        {elb: {hour: 0.025, gigabyte: 0.008}} :
+        {elb: {hour: 0.03, gigabyte: 0.008}};
 }
 
 async function volumePrices(region) {

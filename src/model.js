@@ -62,13 +62,14 @@ function join(cluster, cloud, prices) {
 
     // load-balancers
     const lbsPrices = cluster.loadBalancers.map(({hostname, namespace, type}) => {
-        const loadBalancerPrice = prices.loadBalancer[type];
-        const traffic = 0; // TODO
+        const {hour: perHour = 0, gigabyte: perGB = 0} = prices.loadBalancer[type] || {};
+        const {bytes = 0} = cloud.loadBalancers.find(({dnsName}) => dnsName === hostname) || {};
+        const traffic = (bytes / (1024 * 1024)) * perGB;
         return {
             hostname,
             namespace,
-            total: round(loadBalancerPrice + traffic, 5),
-            loadBalancer: round(loadBalancerPrice, 5),
+            total: round(perHour + traffic, 5),
+            loadBalancer: round(perHour, 5),
             traffic: round(traffic, 5)
         };
     });
