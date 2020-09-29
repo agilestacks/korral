@@ -1,6 +1,16 @@
-const {flatMap} = require('lodash');
+const aws = require('aws-sdk');
+const awsConfig = require('aws-config');
+const {flatMap, fromPairs, sumBy, toPairs} = require('lodash');
 
-async function instances(ec2) {
+function awsServices(region) {
+    const conf = awsConfig({region});
+    const ec2 = new aws.EC2(conf);
+    const elb = new aws.ELB(conf);
+    const cloudwatch = new aws.CloudWatch(conf);
+    return {ec2, elb, cloudwatch};
+}
+
+async function instances({ec2}) {
     const {Reservations: r} = await ec2.describeInstances().promise();
     const cloudVms = flatMap(r, ({Instances: i}) => i.map(({
         InstanceId: id,
@@ -12,7 +22,7 @@ async function instances(ec2) {
     return cloudVms;
 }
 
-async function volumes(ec2) {
+async function volumes({ec2}) {
     const {Volumes: v} = await ec2.describeVolumes().promise();
     const cloudVolumes = v.map(({
         VolumeId: id, VolumeType: type, Size, AvailabilityZone: zone, Attachments
@@ -31,11 +41,14 @@ async function volumes(ec2) {
 // collect CreatedTime, DNSName, LoadBalancerArn
 // https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-cloudwatch-metrics.html
 // collect ConsumedLCUs, IPv6ProcessedBytes, ProcessedBytes
+async function loadBalancers({elb, cloudwatch}, filter = null) {
+}
 
-async function cloud(ec2) {
-    const [cinst, cvol] = await Promise.all([instances(ec2), volumes(ec2)]);
-    const account = {instances: cinst, volumes: cvol};
+async function cloud(services, filters = {}) {
+    const objs = {instances, volumes, loadBalancers};
+    const account = fromPairs(await Promise.all(
+        toPairs(objs).map(([key, getter]) => getter(services, filters[key]).then(r => ([key, r])))));
     return account;
 }
 
-module.exports = {cloud, instances, volumes};
+module.exports = {awsServices, cloud, instances, volumes, loadBalancers};

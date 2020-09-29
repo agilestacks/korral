@@ -1,10 +1,8 @@
-const aws = require('aws-sdk');
-const awsConfig = require('aws-config');
 const {sortBy} = require('lodash');
 
 const {collect} = require('./collect');
 const {cluster} = require('./kubernetes');
-const {cloud} = require('./cloud');
+const {cloud, awsServices} = require('./cloud');
 const {prices} = require('./prices');
 const {dump} = require('./util');
 
@@ -49,8 +47,7 @@ async function printKObjects(ctx) {
 const region = process.env.AWS_DEFAULT_REGION || 'us-east-2';
 
 async function printCObjects() {
-    const ec2 = new aws.EC2(awsConfig({region}));
-    const account = await cloud(ec2);
+    const account = await cloud(awsServices(region));
     dump(account);
 }
 
