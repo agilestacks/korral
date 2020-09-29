@@ -29,7 +29,7 @@ async function push(init) {
             .map(([subsystem, value]) => ({
                 metric: 'korral.k8s.cost.totals',
                 kind: 'gauge',
-                tags: {cluster: context, subsystem},
+                tags: {domain: context, subsystem},
                 value
             }));
         dump({series});

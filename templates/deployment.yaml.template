@@ -29,6 +29,8 @@ spec:
         image: ${component.korral.image}
         imagePullPolicy: Always
         env:
+        - name: KORRAL_DOMAIN
+          value: "${dns.domain}"
         - name: KORRAL_PORT
           value: "9797"
         ports:
