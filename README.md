@@ -32,7 +32,9 @@ The cost model makes a few arbitrary assumptions:
 5. Only `Running` pods are counted.
 6. Orphan volumes costs are not attributed to any pod.
 
-### Configuration
+### Installation and configuration
+
+[install/kubernetes.yaml] configures service account with restricted privileges, installs the deployment, and Prometheus Operator [ServiceMonitor](https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/design.md) custom resource.
 
 > The default scrape timeout for Prometheus is 10 seconds. If your exporter can be expected to exceed this, you should explicitly call this out in your user documentation.
 
