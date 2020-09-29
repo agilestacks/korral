@@ -1,6 +1,5 @@
 const {get, difference, flatMap, groupBy, isEmpty, mapValues, round, sum, sumBy, toNumber, uniq} = require('lodash');
 const {cpuParser, memoryParser} = require('kubernetes-resource-parser');
-// const {dump} = require('./util');
 
 function join(cluster, cloud, prices) {
     // nodes
@@ -76,12 +75,12 @@ function join(cluster, cloud, prices) {
 
     // totals from above
     const k8sPrice = get(prices.k8s, cluster.meta.kind, 0);
-    const nodesPrice = sum(nodesPrices.map(({node}) => node));
-    const allVolumesPrice = sum(nodesPrices.map(({allVolumes}) => allVolumes));
-    const k8sVolumesPrice = sum(nodesPrices.map(({k8sVolumes}) => k8sVolumes));
-    const nativeVolumesPrice = sum(nodesPrices.map(({nativeVolumes}) => nativeVolumes));
-    const orphanedVolumesPrice = sum(orphanedVolumes.map(({volumePrice}) => volumePrice));
-    const lbsPrice = sum(lbsPrices.map(({total}) => total));
+    const nodesPrice = sumBy(nodesPrices, 'node');
+    const allVolumesPrice = sumBy(nodesPrices, 'allVolumes');
+    const k8sVolumesPrice = sumBy(nodesPrices, 'k8sVolumes');
+    const nativeVolumesPrice = sumBy(nodesPrices, 'nativeVolumes');
+    const orphanedVolumesPrice = sumBy(orphanedVolumes, 'volumePrice');
+    const lbsPrice = sumBy(lbsPrices, 'total');
     const totals = {
         total: round(nodesPrice + allVolumesPrice + lbsPrice + k8sPrice, 5),
         nodes: round(nodesPrice, 5),
@@ -103,16 +102,16 @@ function join(cluster, cloud, prices) {
         return {...rest, resources};
     });
 
-    const nodesPods = groupBy(pods, ({nodeName}) => nodeName);
-    const nodesPodsCount = mapValues(nodesPods, ({length}) => length);
+    const nodesPods = groupBy(pods, 'nodeName');
+    const nodesPodsCount = mapValues(nodesPods, 'length');
     const nodesRequestedResources = mapValues(nodesPods,
         nodePods => sumResources(nodePods.map(({resources}) => resources)));
 
-    const namespacesPods = groupBy(pods, ({namespace}) => namespace);
-    const namespacesPodsCount = mapValues(namespacesPods, ({length}) => length);
+    const namespacesPods = groupBy(pods, 'namespace');
+    const namespacesPodsCount = mapValues(namespacesPods, 'length');
 
-    const namespacesLoadbalancers = groupBy(lbsPrices, ({namespace}) => namespace);
-    const namespacesLoadbalancersPrice = mapValues(namespacesLoadbalancers, lbs => sumBy(lbs, ({total}) => total));
+    const namespacesLoadbalancers = groupBy(lbsPrices, 'namespace');
+    const namespacesLoadbalancersPrice = mapValues(namespacesLoadbalancers, lbs => sumBy(lbs, 'total'));
 
     const podK8sPrice = k8sPrice / pods.length;
 
@@ -161,9 +160,9 @@ function join(cluster, cloud, prices) {
     });
 
     // namespace totals
-    const namespacesPodsPrices = groupBy(podsPrices, ({namespace}) => namespace);
-    const namespacesPodsTotals = mapValues(namespacesPodsPrices, p => sumBy(p, ({pod}) => pod));
-    const namespacesVolumesTotals = mapValues(namespacesPodsPrices, p => sumBy(p, ({volumes}) => volumes));
+    const namespacesPodsPrices = groupBy(podsPrices, 'namespace');
+    const namespacesPodsTotals = mapValues(namespacesPodsPrices, p => sumBy(p, 'pod'));
+    const namespacesVolumesTotals = mapValues(namespacesPodsPrices, p => sumBy(p, 'volumes'));
     const namespacesTotals = {
         pods: round(sum(Object.values(namespacesPodsTotals)), 5),
         volumes: round(sum(Object.values(namespacesVolumesTotals)), 5),
