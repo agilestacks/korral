@@ -2,12 +2,12 @@
 
 Korral collects Kubernetes cluster cost metrics and provides them to Prometheus. Currently, on AWS.
 
-Exposed metrics structure adheres to Prometheus [best practices](https://prometheus.io/docs/practices/naming/) where metrics are exported on fine granularity level, then aggregation is performed in Prometheus. There are two facets though to help users write simpler queries:
+The exported metrics structure adheres to Prometheus [best practices](https://prometheus.io/docs/practices/naming/) where metrics are exposed on fine granularity level, then aggregation is performed in Prometheus. There are two facets though to help users write simpler queries:
 
 1. Cluster level where cost is provided on cluster object level: node, node volumes, load-balancers, etc.;
-2. Pod level where cost is per pod and includes pod volumes. Costs that cannot be reliably attributed to a specific pod is amortized accross all pods (in a namespace, on a node). For example, ingress controller load-balancer and it's egress traffic cost, or node boot volume cost.
+2. Pod level where cost is per pod and includes pod volumes. Costs that cannot be reliably attributed to a specific pod is amortized across all pods (in a namespace, on a node). For example, ingress controller load-balancer and it's egress traffic cost or node boot volume cost.
 
-In both cases the metrics are measured in US$ per hour. Sum of all metrics in a facet should add up to the total cluster cost, modulo rounding errors. Note that orphan volumes costs are not included in _Pod level_ facet.
+In both cases, the metrics are measured in US$ per hour. The Sum of all metrics in a facet should add up to the total cluster cost, modulo rounding errors. Note that orphan volumes costs are not included in _Pod level_ facet.
 
 ### Cluster level
 
@@ -21,12 +21,12 @@ In both cases the metrics are measured in US$ per hour. Sum of all metrics in a 
 ### Pod level
 
 - `korral_cluster_pod_cost_per_hour_dollars` - pod cost without cost of attached volumes, split by `name`, `pod_namespace`, `node` tags
-- `korral_cluster_pod_volumes_cost_per_hour_dollars` - pod volumes cost if any, split by `name`, `pod_namespace`, `node` tags
+- `korral_cluster_pod_volumes_cost_per_hour_dollars` - pod volumes cost if any, split by `name`, `pod_namespace`, `node` tags.
 
-Cost model makes a few arbitrary assumptions:
+The cost model makes a few arbitrary assumptions:
 
 1. A sum of pod containers `resources.requests` is used to determine pod share of node total cost. If no `requests` are available, then `limits` are used, else `{ cpu: '100m', memory: '32Mi' }`. RAM cost is 23% of instance cost; this is more or less true for AWS _General Purpose_ instance types. Thus the cost will change as pods are rescheduled.
-2. Cost of node volumes that are not Kubernetes volumes are amortized across pods on that particular node.
+2. Cost of node volumes that are not Kubernetes volumes is amortized across pods on that particular node.
 3. Load-balancer cost is spread across namespace pods evenly. There should be at least one pod.
 4. Cluster cloud provider cost (if any, EKS $0.10) is spread across all pods.
 5. Only `Running` pods are counted.
