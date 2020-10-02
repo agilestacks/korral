@@ -55,3 +55,15 @@ test:
 run:
 	@npm start
 .PHONY: run
+
+src/prices/aws-ebs.json:
+	(echo 'function callback(j) {console.log(JSON.stringify(j))}' && \
+		curl http://a0.awsstatic.com/pricing/1/ebs/pricing-ebs.min.js) | \
+		node | \
+		jq . > $@
+
+src/prices/aws-elb.json:
+	(echo 'function callback(j) {console.log(JSON.stringify(j))}' && \
+		curl http://a0.awsstatic.com/pricing/1/ec2/pricing-elb.min.js) | \
+		node | \
+		jq . > $@

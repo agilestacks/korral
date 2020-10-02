@@ -1,0 +1,1133 @@
+{
+  "vers": 0.01,
+  "config": {
+    "currencies": [
+      "USD"
+    ],
+    "rate": "perGB",
+    "regions": [
+      {
+        "region": "ap-northeast-3",
+        "types": [
+          {
+            "name": "ebsGPSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.12"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsPIOPSSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.142"
+                }
+              },
+              {
+                "rate": "perPIOPSreq",
+                "prices": {
+                  "USD": "0.074"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsTOHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.054"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsColdHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.03"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsSnapsToS3",
+            "values": [
+              {
+                "rate": "perGBmoDataStored",
+                "prices": {
+                  "USD": "0.05"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "region": "us-east-1",
+        "types": [
+          {
+            "name": "ebsGPSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.10"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsPIOPSSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.125"
+                }
+              },
+              {
+                "rate": "perPIOPSreq",
+                "prices": {
+                  "USD": "0.065"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsTOHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.045"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsColdHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.025"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsSnapsToS3",
+            "values": [
+              {
+                "rate": "perGBmoDataStored",
+                "prices": {
+                  "USD": "0.05"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "region": "us-east-2",
+        "types": [
+          {
+            "name": "ebsGPSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.10"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsPIOPSSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.125"
+                }
+              },
+              {
+                "rate": "perPIOPSreq",
+                "prices": {
+                  "USD": "0.065"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsTOHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.045"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsColdHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.025"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsSnapsToS3",
+            "values": [
+              {
+                "rate": "perGBmoDataStored",
+                "prices": {
+                  "USD": "0.05"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "region": "us-west-2",
+        "types": [
+          {
+            "name": "ebsGPSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.10"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsPIOPSSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.125"
+                }
+              },
+              {
+                "rate": "perPIOPSreq",
+                "prices": {
+                  "USD": "0.065"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsTOHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.045"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsColdHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.025"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsSnapsToS3",
+            "values": [
+              {
+                "rate": "perGBmoDataStored",
+                "prices": {
+                  "USD": "0.05"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "region": "us-west-1",
+        "types": [
+          {
+            "name": "ebsGPSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.12"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsPIOPSSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.138"
+                }
+              },
+              {
+                "rate": "perPIOPSreq",
+                "prices": {
+                  "USD": "0.072"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsTOHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.054"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsColdHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.03"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsSnapsToS3",
+            "values": [
+              {
+                "rate": "perGBmoDataStored",
+                "prices": {
+                  "USD": "0.055"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "region": "ap-southeast-1",
+        "types": [
+          {
+            "name": "ebsGPSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.12"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsPIOPSSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.138"
+                }
+              },
+              {
+                "rate": "perPIOPSreq",
+                "prices": {
+                  "USD": "0.072"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsTOHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.054"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsColdHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.03"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsSnapsToS3",
+            "values": [
+              {
+                "rate": "perGBmoDataStored",
+                "prices": {
+                  "USD": "0.05"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "region": "ap-northeast-1",
+        "types": [
+          {
+            "name": "ebsGPSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.12"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsPIOPSSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.142"
+                }
+              },
+              {
+                "rate": "perPIOPSreq",
+                "prices": {
+                  "USD": "0.074"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsTOHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.054"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsColdHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.03"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsSnapsToS3",
+            "values": [
+              {
+                "rate": "perGBmoDataStored",
+                "prices": {
+                  "USD": "0.05"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "region": "ap-southeast-2",
+        "types": [
+          {
+            "name": "ebsGPSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.12"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsPIOPSSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.138"
+                }
+              },
+              {
+                "rate": "perPIOPSreq",
+                "prices": {
+                  "USD": "0.072"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsTOHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.054"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsColdHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.03"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsSnapsToS3",
+            "values": [
+              {
+                "rate": "perGBmoDataStored",
+                "prices": {
+                  "USD": "0.055"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "region": "ap-northeast-2",
+        "types": [
+          {
+            "name": "ebsGPSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.114"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsPIOPSSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.128"
+                }
+              },
+              {
+                "rate": "perPIOPSreq",
+                "prices": {
+                  "USD": "0.067"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsTOHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.051"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsColdHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.029"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsSnapsToS3",
+            "values": [
+              {
+                "rate": "perGBmoDataStored",
+                "prices": {
+                  "USD": "0.05"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "region": "ap-south-1",
+        "types": [
+          {
+            "name": "ebsGPSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.114"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsPIOPSSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.131"
+                }
+              },
+              {
+                "rate": "perPIOPSreq",
+                "prices": {
+                  "USD": "0.068"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsTOHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.051"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsColdHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.029"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsSnapsToS3",
+            "values": [
+              {
+                "rate": "perGBmoDataStored",
+                "prices": {
+                  "USD": "0.05"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "region": "ca-central-1",
+        "types": [
+          {
+            "name": "ebsGPSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.11"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsPIOPSSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.138"
+                }
+              },
+              {
+                "rate": "perPIOPSreq",
+                "prices": {
+                  "USD": "0.072"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsTOHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.05"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsColdHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.028"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsSnapsToS3",
+            "values": [
+              {
+                "rate": "perGBmoDataStored",
+                "prices": {
+                  "USD": "0.055"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "region": "eu-central-1",
+        "types": [
+          {
+            "name": "ebsGPSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.119"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsPIOPSSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.149"
+                }
+              },
+              {
+                "rate": "perPIOPSreq",
+                "prices": {
+                  "USD": "0.078"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsTOHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.054"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsColdHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.03"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsSnapsToS3",
+            "values": [
+              {
+                "rate": "perGBmoDataStored",
+                "prices": {
+                  "USD": "0.054"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "region": "eu-west-1",
+        "types": [
+          {
+            "name": "ebsGPSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.11"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsPIOPSSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.138"
+                }
+              },
+              {
+                "rate": "perPIOPSreq",
+                "prices": {
+                  "USD": "0.072"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsTOHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.05"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsColdHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.028"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsSnapsToS3",
+            "values": [
+              {
+                "rate": "perGBmoDataStored",
+                "prices": {
+                  "USD": "0.05"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "region": "eu-west-2",
+        "types": [
+          {
+            "name": "ebsGPSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.116"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsPIOPSSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.145"
+                }
+              },
+              {
+                "rate": "perPIOPSreq",
+                "prices": {
+                  "USD": "0.076"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsTOHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.053"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsColdHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.029"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsSnapsToS3",
+            "values": [
+              {
+                "rate": "perGBmoDataStored",
+                "prices": {
+                  "USD": "0.053"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "region": "eu-west-3",
+        "types": [
+          {
+            "name": "ebsGPSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.116"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsPIOPSSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.145"
+                }
+              },
+              {
+                "rate": "perPIOPSreq",
+                "prices": {
+                  "USD": "0.076"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsTOHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.053"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsColdHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.029"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsSnapsToS3",
+            "values": [
+              {
+                "rate": "perGBmoDataStored",
+                "prices": {
+                  "USD": "0.053"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "region": "sa-east-1",
+        "types": [
+          {
+            "name": "ebsGPSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.19"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsPIOPSSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.238"
+                }
+              },
+              {
+                "rate": "perPIOPSreq",
+                "prices": {
+                  "USD": "0.091"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsTOHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.086"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsColdHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.048"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsSnapsToS3",
+            "values": [
+              {
+                "rate": "perGBmoDataStored",
+                "prices": {
+                  "USD": "0.068"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "region": "us-gov-west-1",
+        "types": [
+          {
+            "name": "ebsGPSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.12"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsPIOPSSSD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.15"
+                }
+              },
+              {
+                "rate": "perPIOPSreq",
+                "prices": {
+                  "USD": "0.078"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsTOHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.054"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsColdHDD",
+            "values": [
+              {
+                "rate": "perGBmoProvStorage",
+                "prices": {
+                  "USD": "0.03"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ebsSnapsToS3",
+            "values": [
+              {
+                "rate": "perGBmoDataStored",
+                "prices": {
+                  "USD": "0.066"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

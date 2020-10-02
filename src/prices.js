@@ -6,7 +6,7 @@ const awsConfig = require('aws-config');
 const moment = require('moment');
 const {fromPairs, zip} = require('lodash');
 
-async function zoneSpotPrices(ec2, zone, instanceTypes) {
+async function zoneSpot(ec2, zone, instanceTypes) {
     const params = {
         AvailabilityZone: zone,
         DryRun: false,
@@ -26,13 +26,13 @@ async function zoneSpotPrices(ec2, zone, instanceTypes) {
     return prices;
 }
 
-async function spotPrices(region, zones, instanceTypes) {
+async function spot(region, zones, instanceTypes) {
     const ec2 = new aws.EC2(awsConfig({region}));
-    const prices = await Promise.all(zones.map(zone => zoneSpotPrices(ec2, zone, instanceTypes)));
+    const prices = await Promise.all(zones.map(zone => zoneSpot(ec2, zone, instanceTypes)));
     return fromPairs(zip(zones, prices));
 }
 
-async function ondemandPrices(region, instanceTypes) {
+async function ondemand(region, instanceTypes) {
     let prices;
     const filename = `aws-ondemand-prices-${region}.json`;
     if (fs.existsSync(filename)) {
@@ -56,34 +56,66 @@ async function ondemandPrices(region, instanceTypes) {
     return prices;
 }
 
-async function loadBalancerPrices(region) {
-    // TODO proper ELB pricing
-    return region.startsWith('us') ?
-        {elb: {hour: 0.025, gigabyte: 0.008}} :
-        {elb: {hour: 0.03, gigabyte: 0.008}};
-}
-
-async function volumePrices(region) {
-    // TODO proper EBS pricing
-    return region.startsWith('us') ?
-        {gp2: 0.10, st1: 0.045} :
-        {gp2: 0.12, st1: 0.054};
-}
-
-async function eksPrices() {
-    return {eks: 0.10};
-}
-
-async function priceList({region, zones, instanceTypes}) {
-    const [spot, ondemand, plbs, pvol, eks] = await Promise.all([
-        spotPrices(region, zones, instanceTypes),
-        ondemandPrices(region, instanceTypes),
-        loadBalancerPrices(region),
-        volumePrices(region),
-        eksPrices()
-    ]);
-    const prices = {spot, ondemand, loadBalancer: plbs, volume: pvol, k8s: eks};
+// TODO not all regions are present in AWS ELB pricing file
+function loadLoadBalancerPrices() {
+    const {config: {regions}} = JSON.parse(fs.readFileSync('src/prices/aws-elb.json'));
+    const prices = fromPairs(regions.map(({region, types: [{values}]}) => {
+        const {prices: {USD: hour}} = values.find(({rate}) => rate === 'perELBHour');
+        const {prices: {USD: gigabyte}} = values.find(({rate}) => rate === 'perGBProcessed');
+        return [region, {elb: {hour, gigabyte}}];
+    }));
     return prices;
 }
 
-module.exports = {prices: priceList, spotPrices, ondemandPrices, loadBalancerPrices, volumePrices, eksPrices};
+const loadBalancerPrices = loadLoadBalancerPrices();
+
+function loadBalancer(region) {
+    return loadBalancerPrices[region] ||
+        {elb: {hour: 0.025, gigabyte: 0.008}};
+}
+
+function loadVolumePrices() {
+    const translate = {
+        ebsGPSSD: 'gp2',
+        ebsPIOPSSSD: 'io1',
+        ebsTOHDD: 'st1',
+        ebsColdHDD: 'sc1'
+    };
+    const {config: {regions}} = JSON.parse(fs.readFileSync('src/prices/aws-ebs.json'));
+    const prices = fromPairs(regions.map(({region, types}) => {
+        const kinds = fromPairs(types.filter(({name}) => translate[name]).map(({name, values}) => {
+            const {prices: {USD: gigabyte}} = values.find(({rate}) => rate === 'perGBmoProvStorage');
+            return [translate[name], gigabyte];
+        }));
+        return [region, kinds];
+    }));
+    return prices;
+}
+
+const volumePrices = loadVolumePrices();
+
+function volume(region) {
+    return volumePrices[region] ||
+        {gp2: 0.10, io1: 0.125, st1: 0.045, sc1: 0.025};
+}
+
+function eks() {
+    return {eks: 0.10};
+}
+
+async function list({region, zones, instanceTypes}) {
+    const [spotPrices, ondemandPrices] = await Promise.all([
+        spot(region, zones, instanceTypes),
+        ondemand(region, instanceTypes)
+    ]);
+    const prices = {
+        spot: spotPrices,
+        ondemand: ondemandPrices,
+        loadBalancer: loadBalancer(region),
+        volume: volume(region),
+        k8s: eks()
+    };
+    return prices;
+}
+
+module.exports = {prices: list, spot, ondemand, loadBalancer, volume, eks};
