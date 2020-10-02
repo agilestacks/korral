@@ -2,7 +2,7 @@ const {sortBy} = require('lodash');
 
 const {collect} = require('./collect');
 const {cluster} = require('./kubernetes');
-const {cloud, awsServices} = require('./cloud');
+const {cloud: awsCloud, services: awsServices} = require('./cloud/aws');
 const {prices} = require('./prices');
 const {dump} = require('./util');
 
@@ -47,7 +47,7 @@ async function printKObjects(ctx) {
 const region = process.env.AWS_DEFAULT_REGION || 'us-east-2';
 
 async function printCObjects() {
-    const account = await cloud(awsServices(region));
+    const account = await awsCloud(awsServices(region));
     dump(account);
 }
 

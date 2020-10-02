@@ -3,7 +3,7 @@ const awsConfig = require('aws-config');
 const moment = require('moment');
 const {flatMap, fromPairs, sumBy, toPairs} = require('lodash');
 
-function awsServices(region) {
+function services(region) {
     const conf = awsConfig({region});
     const ec2 = new aws.EC2(conf);
     const elb = new aws.ELB(conf);
@@ -60,11 +60,11 @@ async function loadBalancers({elb, cloudwatch}, filter = null) {
     return lbs;
 }
 
-async function cloud(services, filters = {}) {
+async function cloud(apis, filters = {}) {
     const objs = {instances, volumes, loadBalancers};
     const account = fromPairs(await Promise.all(
-        toPairs(objs).map(([key, getter]) => getter(services, filters[key]).then(r => ([key, r])))));
+        toPairs(objs).map(([key, getter]) => getter(apis, filters[key]).then(r => ([key, r])))));
     return account;
 }
 
-module.exports = {awsServices, cloud, instances, volumes, loadBalancers};
+module.exports = {services, cloud, instances, volumes, loadBalancers};

@@ -1,5 +1,5 @@
 const {cluster: kCluster} = require('./kubernetes');
-const {cloud: awsCloud, awsServices} = require('./cloud');
+const {cloud: awsCloud, services: awsServices} = require('./cloud/aws');
 const {prices: awsPrices} = require('./prices');
 const {join} = require('./model');
 
