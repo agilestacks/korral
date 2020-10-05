@@ -1,8 +1,6 @@
 const fs = require('fs');
 const util = require('util');
 const request = require('request');
-const aws = require('aws-sdk');
-const awsConfig = require('aws-config');
 const moment = require('moment');
 const {fromPairs, zip} = require('lodash');
 
@@ -26,8 +24,7 @@ async function zoneSpot(ec2, zone, instanceTypes) {
     return prices;
 }
 
-async function spot(region, zones, instanceTypes) {
-    const ec2 = new aws.EC2(awsConfig({region}));
+async function spot(ec2, zones, instanceTypes) {
     const prices = await Promise.all(zones.map(zone => zoneSpot(ec2, zone, instanceTypes)));
     return fromPairs(zip(zones, prices));
 }
@@ -103,9 +100,9 @@ function eks() {
     return {eks: 0.10};
 }
 
-async function list({region, zones, instanceTypes}) {
+async function list({ec2}, {region, zones, instanceTypes}) {
     const [spotPrices, ondemandPrices] = await Promise.all([
-        spot(region, zones, instanceTypes),
+        spot(ec2, zones, instanceTypes),
         ondemand(region, instanceTypes)
     ]);
     const prices = {

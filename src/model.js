@@ -1,6 +1,8 @@
 const {get, difference, flatMap, groupBy, isEmpty, mapValues, round, sum, sumBy, toNumber, uniq} = require('lodash');
 const {cpuParser, memoryParser} = require('kubernetes-resource-parser');
 
+const {basename} = require('./util');
+
 function join(cluster, cloud, prices) {
     // nodes
     const nodesPrices = cluster.nodes.map(({name, id: instId, instanceType, zone, volumes}) => {
@@ -11,19 +13,19 @@ function join(cluster, cloud, prices) {
             console.log(
                 `Instance ${instanceId} type is ${cloudInstanceType}, but listed as ${instanceType} in Kubernetes`);
         }
-        let {price: nodePrice} = (lifecycle === 'spot' ? prices.spot[zone] : prices.ondemand)
+        let {price: nodePrice} = (lifecycle === 'ondemand' ? prices.ondemand : prices[lifecycle][zone])
             .find(({instanceType: priceInstanceType}) => priceInstanceType === (cloudInstanceType || instanceType));
         nodePrice = toNumber(nodePrice);
 
         // node volumes
-        const k8sVolumes = volumes.map(id => id.split('/')[3]);
+        const k8sVolumes = volumes.map(basename);
         const nativeVolumes = cloud.volumes
             .filter(({attachments}) => attachments.includes(instanceId))
             .map(({id}) => id);
         const [k8sVolumesPrice, nativeVolumesPrice] =
             [k8sVolumes, difference(nativeVolumes, k8sVolumes)].map(vols => sum(vols
                 .map((volumeId) => {
-                    const {type = 'gp2', size = 0, attachments = []} =
+                    const {type = cloud.defaults.volumeType, size = 0, attachments = []} =
                         cloud.volumes.find(({id: cloudId}) => cloudId === volumeId) || {};
                     const volumePrice = (prices.volume[type] * size) / (30 * 24);
                     if (!attachments.includes(instanceId)) {
@@ -46,10 +48,10 @@ function join(cluster, cloud, prices) {
     // orphaned volumes
     const attachedVolumes = flatMap(cluster.nodes, ({volumes}) => volumes);
     const orphanedVolumes = cluster.volumes
-        .filter(({id}) => !attachedVolumes.includes(id))
-        .map(({id, claim: {name: claimName, namespace}}) => {
-            const volumeId = id.split('/')[3];
-            const {type = 'gp2', size = 0, attachments = []} =
+        .filter(({cloudId}) => !attachedVolumes.includes(cloudId))
+        .map(({cloudId: id, claim: {name: claimName, namespace}}) => {
+            const volumeId = basename(id);
+            const {type = cloud.defaults.volumeType, size = 0, attachments = []} =
                 cloud.volumes.find(({id: cloudId}) => cloudId === volumeId) || {};
             const volumePrice = (prices.volume[type] * size) / (30 * 24);
             if (attachments.length) {
@@ -60,9 +62,10 @@ function join(cluster, cloud, prices) {
         });
 
     // load-balancers
-    const lbsPrices = cluster.loadBalancers.map(({hostname, namespace, type}) => {
-        const {hour: perHour = 0, gigabyte: perGB = 0} = prices.loadBalancer[type] || {};
-        const {bytes = 0} = cloud.loadBalancers.find(({dnsName}) => dnsName === hostname) || {};
+    const lbsPrices = cluster.loadBalancers.map(({hostname, ip, namespace, type: klbtype}) => {
+        const {bytes = 0, type: clbtype} = cloud.loadBalancers.find(
+            ({dnsName = '', ipAddress = ''}) => dnsName === hostname || ipAddress === ip) || {};
+        const {hour: perHour = 0, gigabyte: perGB = 0} = prices.loadBalancer[clbtype || klbtype] || {};
         const traffic = (bytes / (1024 * 1024)) * perGB;
         return {
             hostname,
@@ -139,12 +142,12 @@ function join(cluster, cloud, prices) {
 
         const podVolumesPrice = sum(volumes.map(({claimName}) => {
             if (isEmpty(claimName)) return 0;
-            const {id} = cluster.volumes
+            const {cloudId: id} = cluster.volumes
                 .filter(({claim}) => claim)
                 .find(({claim: {name: cn, namespace: ns}}) => cn === claimName && ns === namespace) || {};
             if (isEmpty(id)) return 0;
-            const volumeId = id.split('/')[3];
-            const {type = 'gp2', size = 0} =
+            const volumeId = basename(id);
+            const {type = cloud.defaults.volumeType, size = 0} =
                 cloud.volumes.find(({id: cloudId}) => cloudId === volumeId) || {};
             const volumePrice = (prices.volume[type] * size) / (30 * 24);
             return volumePrice;

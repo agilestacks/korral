@@ -3,11 +3,13 @@ const {sortBy} = require('lodash');
 const {collect} = require('./collect');
 const {cluster} = require('./kubernetes');
 const {cloud: awsCloud, services: awsServices} = require('./cloud/aws');
-const {prices} = require('./prices');
+const {cloud: gcpCloud, services: gcpServices} = require('./cloud/gcp');
+const {prices: awsPrices} = require('./prices/aws');
+const {prices: gcpPrices} = require('./prices/gcp');
 const {dump} = require('./util');
 
 function printTotals(totals) {
-    const {total, nodes, volumes, k8sVolumes, nativeVolumes, orphanedVolumes, loadBalancers, k8s} = totals;
+    const {total, nodes, volumes, k8sVolumes, nativeVolumes, orphanedVolumes, loadBalancers, k8s = 0} = totals;
     console.log(`Cluster:
     Total:   ${total} US$ per hour
     Nodes:   ${nodes}
@@ -44,20 +46,42 @@ async function printKObjects(ctx) {
     dump(kcluster);
 }
 
-const region = process.env.AWS_DEFAULT_REGION || 'us-east-2';
+const clouds = {
+    async aws(region) {
+        return awsCloud(await awsServices(region));
+    },
+    async gcp(region) {
+        return gcpCloud(await gcpServices(region));
+    }
+};
 
-async function printCObjects() {
-    const account = await awsCloud(awsServices(region));
+async function printCObjects({opts: {cloud = 'aws', region}}) {
+    const account = await clouds[cloud](region);
     dump(account);
 }
 
-async function printPrices() {
-    const awsPrices = await prices({
+const cloudPrices = {
+    async aws(region, params) {
+        return awsPrices(await awsServices(region), params);
+    },
+    async gcp(region, params) {
+        return gcpPrices(await gcpServices(region), params);
+    }
+};
+
+async function printPrices({opts: {cloud = 'aws', region: maybeRegion}}) {
+    const region = maybeRegion || (cloud === 'aws' ? process.env.AWS_DEFAULT_REGION : undefined);
+    if (!region) {
+        console.log('Error: unable to determine default cloud region: set --region=');
+        process.exit(2);
+    }
+    const params = {
         region,
-        zones: [`${region}a`, `${region}b`],
-        instanceTypes: ['t3a.medium', 'm5.large']
-    });
-    dump(awsPrices);
+        zones: cloud === 'aws' ? [`${region}a`, `${region}b`] : [`${region}-b`, `${region}-c`],
+        instanceTypes: cloud === 'aws' ? ['t3a.medium', 'm5.large'] : ['n1-standard-4', 'e2-small']
+    };
+    const prices = await cloudPrices[cloud](region, params);
+    dump(prices);
 }
 
 module.exports = {print, printTotals, printNamespaceTotals, printKObjects, printCObjects, printPrices};

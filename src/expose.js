@@ -8,7 +8,7 @@ async function scrape(init, kopts) {
     const ctx = await collect(init, kopts);
 
     const {costs: {totals, nodes, loadBalancers, orphanedVolumes, pods}} = ctx;
-    const {k8s} = totals;
+    const {k8s = 0} = totals;
 
     const nodesCost = nodes.map(
         ({name, node}) => `korral_cluster_node_cost_per_hour_dollars{node="${name}"} ${node}`);
@@ -18,7 +18,7 @@ async function scrape(init, kopts) {
         ({hostname, loadBalancer}) => `korral_cluster_loadbalancer_cost_per_hour_dollars{hostname="${hostname}"} ${loadBalancer}`);
     const lbsTrafficCost = loadBalancers.map(
         ({hostname, traffic}) => `korral_cluster_loadbalancer_traffic_cost_per_hour_dollars{hostname="${hostname}"} ${traffic}`);
-    const k8sCost = `korral_cluster_k8s_cost_per_hour_dollars ${k8s > 0 ? k8s : 0}`;
+    const k8sCost = `korral_cluster_k8s_cost_per_hour_dollars ${k8s}`;
     const orphanedVolumesCost = (orphanedVolumes.length > 0 ? orphanedVolumes : [{volumePrice: 0}]).map(
         ({volumePrice, namespace = 'unknown', claim = 'unknown'}) => `korral_cluster_orphaned_volumes_cost_per_hour_dollars{claim_namespace="${namespace}",claim="${claim}"} ${volumePrice}`);
     const podsCost = pods.map(

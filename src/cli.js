@@ -1,7 +1,7 @@
 const {difference, isEmpty} = require('lodash');
 
 function usage(code = 1) {
-    console.log(`Usage: korral [--help] [--context=<context>] [--debug] [--trace] <command>
+    console.log(`Usage: korral [--help] [--context=<context>] [--cloud=aws|gcp] [--debug] [--trace] <command>
 
 Print cluster cost:
     korral print [--namespaces]
@@ -19,6 +19,7 @@ function parseArgs() {
     const known = ['print', 'push', 'export',
         'kobjects', 'cobjects', 'prices',
         'debug', 'trace', 'help',
+        'cloud', 'region',
         'context',
         'namespaces',
         'interval', 'endpoint', 'key',
@@ -38,6 +39,7 @@ function parseArgs() {
         console.log(`error: unknown command-line argument: ${extra.join(' ')}`);
         usage();
     }
+    if (opts.cloud && !['aws', 'gcp'].includes(opts.cloud)) usage();
     if (opts.help) usage(0);
     if (opts.trace) opts.debug = true;
     return {argv, opts};

@@ -30,7 +30,10 @@ async function nodes(k8sApi) {
             labels['failure-domain.beta.kubernetes.io/region'],
         zone: labels['topology.kubernetes.io/zone'] ||
             labels['failure-domain.beta.kubernetes.io/zone'],
-        volumes: (volumesInUse || []).filter(vol => vol.startsWith('kubernetes.io/aws-ebs/')).map(vol => vol.substr(22))
+        volumes: (volumesInUse || [])
+            .filter(vol => vol.match(/^kubernetes.io\/(aws-ebs|gce-pd)\/.+/))
+            .map(vol => vol.substr(1 + vol.indexOf('/', 14))),
+        ...(labels['cloud.google.com/gke-preemptible'] === 'true' ? {lifecycle: 'preemptible'} : {})
     }));
     return kNodes;
 }
@@ -39,7 +42,7 @@ async function loadBalancers(k8sApi) {
     const {body: {items: n}} = await k8sApi.listServiceForAllNamespaces();
     const lbs = n.filter(({spec: {type}}) => type === 'LoadBalancer');
     const ingress = flatMap(lbs, ({metadata: {namespace}, status}) => get(status, 'loadBalancer.ingress')
-        .map(({hostname}) => ({hostname, namespace, type: 'elb'})));
+        .map(({hostname, ip}) => ({hostname, ip, namespace, type: hostname ? 'elb' : undefined})));
     return ingress;
 }
 
@@ -48,14 +51,15 @@ async function volumes(k8sApi) {
     const kVolumes = n.map(({
         metadata: {name},
         spec: {
-            awsElasticBlockStore: {volumeID: id},
+            awsElasticBlockStore: {volumeID} = {},
+            gcePersistentDisk: {pdName} = {},
             capacity: {storage},
             claimRef
         }
     }) => {
         const {name: claimName, namespace} = claimRef || {};
         return {
-            id,
+            cloudId: volumeID || pdName,
             name,
             storage,
             claim: claimName ? {name: claimName, namespace} : {}
@@ -104,8 +108,9 @@ async function pvclaims(k8sApi) {
 }
 
 function kubeKind(kcluster) {
-    const {meta: {version}} = kcluster;
-    const kind = (version.gitVersion || '').includes('-eks-') ? 'eks' : 'generic';
+    const {meta: {version: {gitVersion: v = ''} = {}}} = kcluster;
+    // eslint-disable-next-line no-nested-ternary
+    const kind = v.includes('-eks-') ? 'eks' : v.includes('-gke.') ? 'gke' : 'generic';
     return {kind};
 }
 

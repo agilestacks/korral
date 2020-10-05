@@ -23,4 +23,10 @@ function trimAxiosVerbosity(error) {
     return error;
 }
 
-module.exports = {noop, dump, sleep, trimAxiosVerbosity};
+function basename(uri) {
+    const i = uri.lastIndexOf('/');
+    if (i > 0 && i < uri.length - 1) return uri.substr(1 + i);
+    return uri;
+}
+
+module.exports = {noop, dump, sleep, trimAxiosVerbosity, basename};
