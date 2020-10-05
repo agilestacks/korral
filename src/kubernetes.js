@@ -20,7 +20,7 @@ async function nodes(k8sApi) {
     const kNodes = n.map(({
         metadata: {name, labels},
         spec: {providerID: id},
-        status: {volumesInUse}
+        status: {volumesInUse, capacity: {cpu, memory}}
     }) => ({
         name,
         id,
@@ -30,6 +30,7 @@ async function nodes(k8sApi) {
             labels['failure-domain.beta.kubernetes.io/region'],
         zone: labels['topology.kubernetes.io/zone'] ||
             labels['failure-domain.beta.kubernetes.io/zone'],
+        capacity: {cpu, memory},
         volumes: (volumesInUse || [])
             .filter(vol => vol.match(/^kubernetes.io\/(aws-ebs|gce-pd)\/.+/))
             .map(vol => vol.substr(1 + vol.indexOf('/', 14))),
