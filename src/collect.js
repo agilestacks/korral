@@ -6,7 +6,7 @@ const {prices: gcpPrices} = require('./prices/gcp');
 const {join} = require('./model');
 
 async function aws({cluster, cloudApi, dump}) {
-    const {meta: {region, zones, instanceTypes}, loadBalancers} = cluster;
+    const {meta: {region, zones, instances}, loadBalancers} = cluster;
 
     // filter out unrelated load-balancers before going to CloudWatch Metrics for stats
     const lbHostnames = loadBalancers.map(({hostname}) => hostname);
@@ -17,21 +17,21 @@ async function aws({cluster, cloudApi, dump}) {
     const cloud = await awsCloud(api, {loadBalancers: lbFilter});
     dump({cloud});
 
-    const prices = await awsPrices(api, {region, zones, instanceTypes});
+    const prices = await awsPrices(api, {region, zones, instances});
     dump({prices});
 
     return {cloud, prices, cloudApi: api};
 }
 
 async function gcp({cluster, cloudApi, dump}) {
-    const {meta: {region, zones, instanceTypes}} = cluster;
+    const {meta: {region, zones, instances}} = cluster;
 
     const api = cloudApi || await gcpServices(region);
 
     const cloud = await gcpCloud(api, {zones});
     dump({cloud});
 
-    const prices = await gcpPrices(api, {region, zones, instanceTypes});
+    const prices = await gcpPrices(api, {region, zones, instances});
     dump({prices});
 
     return {cloud, prices, cloudApi: api};

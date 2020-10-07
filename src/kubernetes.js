@@ -1,6 +1,7 @@
 const util = require('util');
 const request = require('request');
-const {get, flatMap, uniq} = require('lodash');
+const {get, flatMap, map, uniq, uniqBy} = require('lodash');
+const {cpuParser, memoryParser} = require('kubernetes-resource-parser');
 
 async function meta(k8sApi) {
     const opt = {
@@ -24,13 +25,18 @@ async function nodes(k8sApi) {
     }) => ({
         name,
         id,
-        instanceType: labels['node.kubernetes.io/instance-type'] ||
-            labels['beta.kubernetes.io/instance-type'],
+        instance: {
+            type: labels['node.kubernetes.io/instance-type'] ||
+                labels['beta.kubernetes.io/instance-type'],
+            capacity: {
+                cpu: cpuParser(cpu),
+                memory: memoryParser(memory) / (1024 * 1024 * 1024)
+            }
+        },
         region: labels['topology.kubernetes.io/region'] ||
             labels['failure-domain.beta.kubernetes.io/region'],
         zone: labels['topology.kubernetes.io/zone'] ||
             labels['failure-domain.beta.kubernetes.io/zone'],
-        capacity: {cpu, memory},
         volumes: (volumesInUse || [])
             .filter(vol => vol.match(/^kubernetes.io\/(aws-ebs|gce-pd)\/.+/))
             .map(vol => vol.substr(1 + vol.indexOf('/', 14))),
@@ -117,12 +123,12 @@ function kubeKind(kcluster) {
 
 function cloudProperties(kcluster) {
     const {nodes: knodes} = kcluster;
-    const regions = uniq(knodes.map(({region}) => region));
+    const regions = uniq(map(knodes, 'region'));
     if (regions.length > 0) {
         const [region] = regions;
-        const zones = uniq(knodes.map(({zone}) => zone));
-        const instanceTypes = uniq(knodes.map(({instanceType}) => instanceType));
-        return {region, zones, instanceTypes};
+        const zones = uniq(map(knodes, 'zone'));
+        const instances = uniqBy(map(knodes, 'instance'), 'type');
+        return {region, zones, instances};
     }
     if (regions.length !== 1) {
         console.log(`Expected cluster nodes in a single cloud region: got ${regions}`);

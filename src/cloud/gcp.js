@@ -25,7 +25,7 @@ async function regionZones(settings) {
     return zones;
 }
 
-async function instances(settings, zones) {
+async function instances(settings, {zones}) {
     const resps = await Promise.all(zones.map(
         zone => compute.instances.list({...settings, zone})
     ));
@@ -39,7 +39,7 @@ async function instances(settings, zones) {
     return vms;
 }
 
-async function disks(settings, zones) {
+async function disks(settings, {zones}) {
     const resps = await Promise.all(zones.map(
         zone => compute.disks.list({...settings, zone})
     ));

@@ -7,16 +7,21 @@ https://cloudbilling.googleapis.com/v1/services/6F81-5844-456A/skus?key=
 Fetch pages with &pageToken=.nextPageToken until nextPageToken is empty.
 &pageSize=5000 is the default and also max page size.
 Attack this by parsing category { resourceFamily, resourceGroup, usageType }, description.
-Kubernetes node has capacity { cpu, nmemory } exposed.
+Kubernetes node has capacity { cpu, memory } exposed.
 */
 
-async function list(settings, {region, zones, instanceTypes}) {
+async function list(settings, {region, zones, instances}) { // eslint-disable-line no-unused-vars
+    const inst = instances.map(({type, capacity: {cpu, memory}}) => ({
+        type,
+        price: cpu * 0.030 + memory * 0.004,
+        preemptible: cpu * 0.008 + memory * 0.001
+    }));
     const prices = {
         preemptible: fromPairs(zones.map(
-            zone => [zone, instanceTypes.map(instanceType => ({instanceType, price: 0.02}))])),
-        ondemand: instanceTypes.map(instanceType => ({instanceType, price: 0.05})),
+            zone => [zone, inst.map(({type, preemptible}) => ({instanceType: type, price: preemptible}))])),
+        ondemand: inst.map(({type, price}) => ({instanceType: type, price})),
         loadBalancer: {external: {hour: 0.025, gigabyte: 0.12}},
-        volume: {'pd-standard': 0.04, 'pd-ssd': 0.17},
+        volume: {'pd-standard': 0.05, 'pd-ssd': 0.19},
         k8s: {gke: 0}
     };
     return prices;

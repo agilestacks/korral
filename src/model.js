@@ -5,8 +5,8 @@ const {basename} = require('./util');
 
 function join(cluster, cloud, prices) {
     // nodes
-    const nodesPrices = cluster.nodes.map(({name, id: instId, instanceType, zone, volumes}) => {
-        const instanceId = instId.split('/')[4];
+    const nodesPrices = cluster.nodes.map(({name, id: instId, instance: {type: instanceType}, zone, volumes}) => {
+        const instanceId = basename(instId);
         const {instanceType: cloudInstanceType, lifecycle = 'ondemand'} = cloud.instances.find(
             ({id: cloudId}) => cloudId === instanceId) || {};
         if (instanceType !== cloudInstanceType) {

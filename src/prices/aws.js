@@ -2,7 +2,7 @@ const fs = require('fs');
 const util = require('util');
 const request = require('request');
 const moment = require('moment');
-const {fromPairs, zip} = require('lodash');
+const {fromPairs, map, zip} = require('lodash');
 
 async function zoneSpot(ec2, zone, instanceTypes) {
     const params = {
@@ -100,7 +100,8 @@ function eks() {
     return {eks: 0.10};
 }
 
-async function list({ec2}, {region, zones, instanceTypes}) {
+async function list({ec2}, {region, zones, instances}) {
+    const instanceTypes = map(instances, 'type');
     const [spotPrices, ondemandPrices] = await Promise.all([
         spot(ec2, zones, instanceTypes),
         ondemand(region, instanceTypes)

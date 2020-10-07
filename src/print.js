@@ -11,7 +11,7 @@ const {dump} = require('./util');
 function printTotals(totals) {
     const {total, nodes, volumes, k8sVolumes, nativeVolumes, orphanedVolumes, loadBalancers, k8s = 0} = totals;
     console.log(`Cluster:
-    Total:   ${total} US$ per hour
+    Total:   ${total} USD per hour
     Nodes:   ${nodes}
     Volumes: ${volumes}
              ${k8sVolumes} Kubernetes
