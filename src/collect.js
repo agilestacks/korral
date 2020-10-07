@@ -1,3 +1,5 @@
+const {map} = require('lodash');
+
 const {cluster: kCluster} = require('./kubernetes');
 const {cloud: awsCloud, services: awsServices} = require('./cloud/aws');
 const {cloud: gcpCloud, services: gcpServices} = require('./cloud/gcp');
@@ -9,12 +11,12 @@ async function aws({cluster, cloudApi, dump}) {
     const {meta: {region, zones, instances}, loadBalancers} = cluster;
 
     // filter out unrelated load-balancers before going to CloudWatch Metrics for stats
-    const lbHostnames = loadBalancers.map(({hostname}) => hostname);
+    const lbHostnames = map(loadBalancers, 'hostname');
     const lbFilter = ({DNSName}) => lbHostnames.includes(DNSName);
 
     const api = cloudApi || await awsServices(region);
 
-    const cloud = await awsCloud(api, {loadBalancers: lbFilter});
+    const cloud = await awsCloud(api, {filters: {loadBalancers: lbFilter}});
     dump({cloud});
 
     const prices = await awsPrices(api, {region, zones, instances});
@@ -24,11 +26,15 @@ async function aws({cluster, cloudApi, dump}) {
 }
 
 async function gcp({cluster, cloudApi, dump}) {
-    const {meta: {region, zones, instances}} = cluster;
+    const {meta: {region, zones, instances}, loadBalancers} = cluster;
+
+    // filter out unrelated load-balancers before going to Cloud Monitoring Metrics for stats
+    const lbIps = map(loadBalancers, 'ip');
+    const lbFilter = ({IPAddress}) => lbIps.includes(IPAddress);
 
     const api = cloudApi || await gcpServices(region);
 
-    const cloud = await gcpCloud(api, {zones});
+    const cloud = await gcpCloud(api, {zones, filters: {loadBalancers: lbFilter}});
     dump({cloud});
 
     const prices = await gcpPrices(api, {region, zones, instances});

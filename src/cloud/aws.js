@@ -3,6 +3,8 @@ const awsConfig = require('aws-config');
 const moment = require('moment');
 const {flatMap, fromPairs, sumBy, toPairs} = require('lodash');
 
+// https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/index.html
+
 const defaults = {
     volumeType: 'gp2'
 };
@@ -41,7 +43,7 @@ async function volumes({ec2}) {
     return vols;
 }
 
-async function loadBalancers({elb, cloudwatch}, filter = null) {
+async function loadBalancers({elb, cloudwatch}, {filter = () => true} = {}) {
     const {LoadBalancerDescriptions: l} = await elb.describeLoadBalancers().promise();
     const period = 24; // hours
     const params = {
@@ -53,7 +55,7 @@ async function loadBalancers({elb, cloudwatch}, filter = null) {
         Statistics: ['Sum'],
         Unit: 'Bytes'
     };
-    const lbs = await Promise.all(l.filter(filter || (() => true)).map(async ({DNSName, LoadBalancerName}) => {
+    const lbs = await Promise.all(l.filter(filter).map(async ({DNSName, LoadBalancerName}) => {
         const {Datapoints: d} = await cloudwatch.getMetricStatistics(
             {...params, Dimensions: [{Name: 'LoadBalancerName', Value: LoadBalancerName}]}).promise();
         return {
@@ -65,10 +67,10 @@ async function loadBalancers({elb, cloudwatch}, filter = null) {
     return lbs;
 }
 
-async function cloud(apis, filters = {}) {
+async function cloud(apis, {filters = {}} = {}) {
     const objs = {instances, volumes, loadBalancers};
     const account = fromPairs(await Promise.all(
-        toPairs(objs).map(([key, getter]) => getter(apis, filters[key]).then(r => ([key, r])))));
+        toPairs(objs).map(([key, getter]) => getter(apis, {filter: filters[key]}).then(r => ([key, r])))));
     return {...account, defaults};
 }
 

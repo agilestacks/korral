@@ -1,9 +1,17 @@
 const {google} = require('googleapis');
-const {flatMap, fromPairs, toPairs} = require('lodash');
+const {flatMap, fromPairs, toPairs, sum, toNumber} = require('lodash');
 
-const {basename} = require('../util');
+const {basename, dump} = require('../util');
+
+// https://cloud.google.com/apis/docs/client-libraries-explained
+// https://github.com/googleapis/google-api-nodejs-client
+// https://cloud.google.com/compute/docs/reference/rest/v1
+// https://cloud.google.com/monitoring/api/ref_v3/rest
+// https://github.com/googleapis/nodejs-compute
+// https://github.com/googleapis/nodejs-monitoring
 
 const compute = google.compute('v1');
+const monitoring = google.monitoring('v3');
 
 const defaults = {
     volumeType: 'pd-standard'
@@ -11,7 +19,10 @@ const defaults = {
 
 async function services(region) {
     const auth = new google.auth.GoogleAuth({
-        scopes: ['https://www.googleapis.com/auth/compute']
+        scopes: [
+            'https://www.googleapis.com/auth/compute.readonly',
+            'https://www.googleapis.com/auth/monitoring.read'
+        ]
     });
     const authClient = await auth.getClient();
     const project = await auth.getProjectId();
@@ -54,22 +65,45 @@ async function disks(settings, {zones}) {
     return zonalDisks;
 }
 
-async function loadBalancers(settings) {
+async function loadBalancers(settings, {filter = () => true} = {}) {
+    const {auth, project} = settings;
     const {data: {items = []}} = await compute.forwardingRules.list(settings);
-    const lbs = items.map(({IPAddress: ipAddress, loadBalancingScheme, networkTier}) => ({
-        ipAddress,
-        type: loadBalancingScheme.toLowerCase(),
-        tier: networkTier.toLowerCase(),
-        bytes: 0 // TODO
-    }));
+    const lbs = await Promise.all(items.filter(filter)
+        .map(async ({name, IPAddress: ipAddress, loadBalancingScheme, networkTier}) => {
+            const query = `fetch tcp_lb_rule
+                | metric 'loadbalancing.googleapis.com/l3/external/egress_bytes_count'
+                | filter forwarding_rule_name = "${name}"
+                | within 1h
+                | sum`;
+            const {data: {timeSeriesData, error}} = await monitoring.projects.timeSeries.query({
+                auth,
+                name: `projects/${project}`,
+                requestBody: {query}
+            }).catch(({response}) => response);
+            let bytes = 0;
+            if (timeSeriesData) {
+                const [{pointData}] = timeSeriesData;
+                bytes = sum(flatMap(pointData, ({values}) => values.map(({int64Value}) => toNumber(int64Value))));
+            } else if (error) { // Cloud Monitoring API might not be enabled on the project
+                console.log('Error getting Cloud Monitoring forwarding rule egress metrics:');
+                dump({error});
+            }
+            return {
+                name,
+                ipAddress,
+                type: loadBalancingScheme.toLowerCase(),
+                tier: networkTier.toLowerCase(),
+                bytes
+            };
+        }));
     return lbs;
 }
 
-async function cloud(settings, {zones: z} = {}) {
+async function cloud(settings, {zones: z, filters = {}} = {}) {
     const zones = z || await regionZones(settings);
     const objs = {instances, volumes: disks, loadBalancers};
     const account = fromPairs(await Promise.all(
-        toPairs(objs).map(([key, getter]) => getter(settings, zones).then(r => ([key, r])))));
+        toPairs(objs).map(([key, getter]) => getter(settings, {zones, filter: filters[key]}).then(r => ([key, r])))));
     return {...account, zones, defaults};
 }
 

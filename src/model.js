@@ -66,7 +66,7 @@ function join(cluster, cloud, prices) {
         const {bytes = 0, type: clbtype} = cloud.loadBalancers.find(
             ({dnsName = '', ipAddress = ''}) => dnsName === hostname || ipAddress === ip) || {};
         const {hour: perHour = 0, gigabyte: perGB = 0} = prices.loadBalancer[clbtype || klbtype] || {};
-        const traffic = (bytes / (1024 * 1024)) * perGB;
+        const traffic = (bytes / (1024 * 1024 * 1024)) * perGB;
         return {
             hostname,
             namespace,
