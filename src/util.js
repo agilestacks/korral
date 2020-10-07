@@ -6,7 +6,7 @@ function noop() {
 }
 
 function dump(obj) {
-    console.log(util.inspect(obj, {depth: 6, showHidden: false}));
+    console.log(util.inspect(obj, {depth: 10, showHidden: false}));
 }
 
 function sleep(ms) {

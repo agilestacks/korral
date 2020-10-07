@@ -41,9 +41,16 @@ async function print(ctx) {
 }
 
 async function printKObjects(ctx) {
-    const {k8sApi} = ctx;
-    const kcluster = await cluster(k8sApi, {pods: true});
+    const {k8sApi, opts: {namespaces: readPods}} = ctx;
+    const kcluster = await cluster(k8sApi, {pods: !!readPods});
     dump(kcluster);
+}
+
+function guessRegion(cloud, maybeRegion) { // eslint-disable-line consistent-return
+    const region = maybeRegion || (cloud === 'aws' ? process.env.AWS_DEFAULT_REGION : undefined);
+    if (region) return region;
+    console.log('Error: unable to determine default cloud region: set --region=');
+    process.exit(2);
 }
 
 const clouds = {
@@ -55,7 +62,8 @@ const clouds = {
     }
 };
 
-async function printCObjects({opts: {cloud = 'aws', region}}) {
+async function printCObjects({opts: {cloud = 'aws', region: maybeRegion}}) {
+    const region = guessRegion(cloud, maybeRegion);
     const account = await clouds[cloud](region);
     dump(account);
 }
@@ -70,11 +78,7 @@ const cloudPrices = {
 };
 
 async function printPrices({opts: {cloud = 'aws', region: maybeRegion}}) {
-    const region = maybeRegion || (cloud === 'aws' ? process.env.AWS_DEFAULT_REGION : undefined);
-    if (!region) {
-        console.log('Error: unable to determine default cloud region: set --region=');
-        process.exit(2);
-    }
+    const region = guessRegion(cloud, maybeRegion);
     const params = {
         region,
         zones: cloud === 'aws' ? [`${region}a`, `${region}b`] : [`${region}-b`, `${region}-c`],
