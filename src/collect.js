@@ -64,7 +64,7 @@ async function collect({k8sApi, cloudApi = null, dump, opts}, kopts = {}) {
     const costs = join(cluster, cloud, prices);
     dump({costs});
 
-    return {cluster, cloud, prices, costs, k8sApi, cloudApi: api, dump};
+    return {cluster, cloud, prices, costs, k8sApi, cloudApi: api, dump, opts};
 }
 
 module.exports = {collect};
