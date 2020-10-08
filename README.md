@@ -36,6 +36,8 @@ The cost model makes a few arbitrary assumptions:
 
 [install/kubernetes.yaml] configures service account with restricted privileges, installs the deployment, and Prometheus Operator [ServiceMonitor](https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/design.md) custom resource.
 
+Installed on EKS or GKE it will automatically determine cloud API to use - AWS or GCP, respectivelly. If you have your own Kubernetes flavor, please add `--cloud=aws|gcp` to deployment `args`.
+
 > The default scrape timeout for Prometheus is 10 seconds. If your exporter can be expected to exceed this, you should explicitly call this out in your user documentation.
 
 Installed Prometheus `ServiceMonitor` custom resource configures the timeout to 20sec. You may want to change that.

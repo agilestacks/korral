@@ -66,6 +66,9 @@ spec:
       - name: exporter
         image: agilestacks/korral
         imagePullPolicy: Always
+        args:
+        - export
+        - --check
         env:
         - name: KORRAL_PORT
           value: "9797"
