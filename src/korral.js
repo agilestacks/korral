@@ -1,7 +1,7 @@
 const k8s = require('@kubernetes/client-node');
 
 const {dump, noop} = require('./util');
-const {parseArgs, defaultConfig} = require('./cli');
+const {parseArgs, defaultConfig, usage} = require('./cli');
 const {print, printKObjects: kobjects, printCObjects: cobjects, printPrices: prices} = require('./print');
 const {push} = require('./push');
 const {expose} = require('./expose');
@@ -17,7 +17,9 @@ async function main() {
 
     const command = argv[0];
     const commands = {print, push, export: expose, kobjects, cobjects, prices};
-    await commands[command]({argv, opts, k8sApi, dump: opts.debug ? dump : noop});
+    const impl = commands[command];
+    if (!impl) usage();
+    await impl({argv, opts, k8sApi, dump: opts.debug ? dump : noop});
 }
 
 main();

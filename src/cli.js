@@ -61,4 +61,4 @@ function defaultConfig({argv, opts}) {
     };
 }
 
-module.exports = {parseArgs, defaultConfig};
+module.exports = {parseArgs, defaultConfig, usage};
