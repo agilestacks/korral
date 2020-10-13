@@ -1,29 +1,26 @@
-const {get, difference, flatMap, groupBy, isEmpty, mapValues, round, sum, sumBy, toNumber, uniq} = require('lodash');
+const {get, difference, flatMap, groupBy, isEmpty, mapValues, round, sum, sumBy, uniq} = require('lodash');
 const {cpuParser, memoryParser} = require('kubernetes-resource-parser');
-
-const {basename} = require('./util');
 
 function join(cluster, cloud, prices) {
     // nodes
-    const nodesPrices = cluster.nodes.map(({name, id: instId, instance: {type: instanceType}, zone, volumes}) => {
-        const instanceId = basename(instId);
+    const nodesPrices = cluster.nodes.map(({name, id: instanceId, instance: {type: instanceType}, zone, volumes}) => {
         const {instanceType: cloudInstanceType, lifecycle = 'ondemand'} = cloud.instances.find(
             ({id: cloudId}) => cloudId === instanceId) || {};
         if (instanceType !== cloudInstanceType) {
             console.log(
                 `Instance ${instanceId} type is ${cloudInstanceType}, but listed as ${instanceType} in Kubernetes`);
         }
-        let {price: nodePrice} = (lifecycle === 'ondemand' ? prices.ondemand : prices[lifecycle][zone])
+        const {price: nodePrice} = (lifecycle === 'ondemand' ? prices.ondemand : prices[lifecycle][zone])
             .find(({instanceType: priceInstanceType}) => priceInstanceType === (cloudInstanceType || instanceType));
-        nodePrice = toNumber(nodePrice);
 
         // node volumes
-        const k8sVolumes = volumes.map(basename);
-        const nativeVolumes = cloud.volumes
+        const k8sVolumes = volumes;
+        const nodeVolumes = cloud.volumes
             .filter(({attachments}) => attachments.includes(instanceId))
             .map(({id}) => id);
+        const nativeVolumes = difference(nodeVolumes, k8sVolumes);
         const [k8sVolumesPrice, nativeVolumesPrice] =
-            [k8sVolumes, difference(nativeVolumes, k8sVolumes)].map(vols => sum(vols
+            [k8sVolumes, nativeVolumes].map(vols => sum(vols
                 .map((volumeId) => {
                     const {type = cloud.defaults.volumeType, size = 0, attachments = []} =
                         cloud.volumes.find(({id: cloudId}) => cloudId === volumeId) || {};
@@ -48,9 +45,8 @@ function join(cluster, cloud, prices) {
     // orphaned volumes
     const attachedVolumes = flatMap(cluster.nodes, ({volumes}) => volumes);
     const orphanedVolumes = cluster.volumes
-        .filter(({cloudId}) => !attachedVolumes.includes(cloudId))
-        .map(({cloudId: id, claim: {name: claimName, namespace}}) => {
-            const volumeId = basename(id);
+        .filter(({id}) => !attachedVolumes.includes(id))
+        .map(({id: volumeId, claim: {name: claimName, namespace}}) => {
             const {type = cloud.defaults.volumeType, size = 0, attachments = []} =
                 cloud.volumes.find(({id: cloudId}) => cloudId === volumeId) || {};
             const volumePrice = (prices.volume[type] * size) / (30 * 24);
@@ -127,7 +123,7 @@ function join(cluster, cloud, prices) {
     // - cloud cluster cost (if any) divided equaly between pods
     const podsPrices = pods.map(({name, namespace, nodeName, resources, volumes}) => {
         const {node: nodeCost = 0, nativeVolumes: nodeNativeVolumesCost = 0} =
-            nodesPrices.find(({name: nn}) => nn === nodeName);
+            nodesPrices.find(({name: nn}) => nn === nodeName) || {}; // TODO Azure virtual node support?
 
         const nodeCpuCost = nodeCost * 0.77;
         const nodeMemoryCost = nodeCost * 0.23;
@@ -142,11 +138,10 @@ function join(cluster, cloud, prices) {
 
         const podVolumesPrice = sum(volumes.map(({claimName}) => {
             if (isEmpty(claimName)) return 0;
-            const {cloudId: id} = cluster.volumes
+            const {id: volumeId} = cluster.volumes
                 .filter(({claim}) => claim)
                 .find(({claim: {name: cn, namespace: ns}}) => cn === claimName && ns === namespace) || {};
-            if (isEmpty(id)) return 0;
-            const volumeId = basename(id);
+            if (isEmpty(volumeId)) return 0;
             const {type = cloud.defaults.volumeType, size = 0} =
                 cloud.volumes.find(({id: cloudId}) => cloudId === volumeId) || {};
             const volumePrice = (prices.volume[type] * size) / (30 * 24);

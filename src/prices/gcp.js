@@ -10,7 +10,7 @@ Attack this by parsing category { resourceFamily, resourceGroup, usageType }, de
 Kubernetes node has capacity { cpu, memory } exposed.
 */
 
-async function list(settings, {region, zones, instances}) { // eslint-disable-line no-unused-vars
+async function list(settings, {region, zones = [], instances = []}) { // eslint-disable-line no-unused-vars
     const inst = instances.map(({type, capacity: {cpu, memory}}) => ({
         type,
         price: cpu * 0.030 + memory * 0.004,

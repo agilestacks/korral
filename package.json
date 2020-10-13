@@ -6,6 +6,9 @@
     "lint": "eslint src/"
   },
   "dependencies": {
+    "@azure/arm-compute": "^15.0.0",
+    "@azure/arm-network": "^23.0.0",
+    "@azure/ms-rest-nodeauth": "^3.0.6",
     "@kubernetes/client-node": "^0.12.2",
     "aws-config": "^1.4.0",
     "aws-sdk": "^2.754.0",

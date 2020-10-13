@@ -4,8 +4,10 @@ const {collect} = require('./collect');
 const {cluster} = require('./kubernetes');
 const {cloud: awsCloud, services: awsServices} = require('./cloud/aws');
 const {cloud: gcpCloud, services: gcpServices} = require('./cloud/gcp');
+const {cloud: azureCloud, services: azureServices} = require('./cloud/azure');
 const {prices: awsPrices} = require('./prices/aws');
 const {prices: gcpPrices} = require('./prices/gcp');
+const {prices: azurePrices} = require('./prices/azure');
 const {dump} = require('./util');
 
 function printTotals(totals) {
@@ -47,7 +49,8 @@ async function printKObjects(ctx) {
 }
 
 function guessRegion(cloud, maybeRegion) { // eslint-disable-line consistent-return
-    const region = maybeRegion || (cloud === 'aws' ? process.env.AWS_DEFAULT_REGION : undefined);
+    const region = maybeRegion || (cloud === 'aws' ? process.env.AWS_DEFAULT_REGION :
+        cloud === 'azure' ? process.env.AZURE_REGION : undefined);
     if (region) return region;
     console.log('Error: unable to determine default cloud region: set --region=');
     process.exit(2);
@@ -59,6 +62,9 @@ const clouds = {
     },
     async gcp(region) {
         return gcpCloud(await gcpServices(region));
+    },
+    async azure(region) {
+        return azureCloud(await azureServices(region));
     }
 };
 
@@ -74,6 +80,9 @@ const cloudPrices = {
     },
     async gcp(region, params) {
         return gcpPrices(await gcpServices(region), params);
+    },
+    async azure(region, params) {
+        return azurePrices(await azureServices(region), params);
     }
 };
 
@@ -81,8 +90,12 @@ async function printPrices({opts: {cloud = 'aws', region: maybeRegion}}) {
     const region = guessRegion(cloud, maybeRegion);
     const params = {
         region,
-        zones: cloud === 'aws' ? [`${region}a`, `${region}b`] : [`${region}-b`, `${region}-c`],
-        instanceTypes: cloud === 'aws' ? ['t3a.medium', 'm5.large'] : ['n1-standard-4', 'e2-small']
+        zones: cloud === 'aws' ? [`${region}a`, `${region}b`] :
+            cloud === 'gcp' ? [`${region}-b`, `${region}-c`] :
+                ['0', '1'],
+        instanceTypes: cloud === 'aws' ? ['t3a.medium', 'm5.large'] :
+            cloud === 'gcp' ? ['n1-standard-4', 'e2-small'] : // TODO instance capacity
+                ['Standard_F4s_v2', 'Standard_F8s_v2']
     };
     const prices = await cloudPrices[cloud](region, params);
     dump(prices);

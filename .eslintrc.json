@@ -21,7 +21,8 @@
     "prefer-promise-reject-errors": "off",
     "arrow-parens": ["error", "as-needed", { "requireForBlockBody": true }],
     "max-classes-per-file": "off",
-    "no-console": "off"
+    "no-console": "off",
+    "no-nested-ternary": "off"
   },
   "env": {
     "node": true,

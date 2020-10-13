@@ -3,6 +3,8 @@ const request = require('request');
 const {get, flatMap, map, uniq, uniqBy} = require('lodash');
 const {cpuParser, memoryParser} = require('kubernetes-resource-parser');
 
+const {basename, path} = require('./util');
+
 async function meta(k8sApi) {
     const opt = {
         method: 'GET',
@@ -18,13 +20,14 @@ async function meta(k8sApi) {
 
 async function nodes(k8sApi) {
     const {body: {items: n}} = await k8sApi.listNode();
-    const kNodes = n.map(({
+    const kNodes = n.filter(({spec: {providerID}}) => providerID).map(({
         metadata: {name, labels},
-        spec: {providerID: id},
+        spec: {providerID},
         status: {volumesInUse, capacity: {cpu, memory}}
     }) => ({
         name,
-        id,
+        // TODO better conditional?
+        id: providerID.startsWith('azure://') ? path(providerID) : basename(providerID),
         instance: {
             type: labels['node.kubernetes.io/instance-type'] ||
                 labels['beta.kubernetes.io/instance-type'],
@@ -38,8 +41,9 @@ async function nodes(k8sApi) {
         zone: labels['topology.kubernetes.io/zone'] ||
             labels['failure-domain.beta.kubernetes.io/zone'],
         volumes: (volumesInUse || [])
-            .filter(vol => vol.match(/^kubernetes.io\/(aws-ebs|gce-pd)\/.+/))
-            .map(vol => vol.substr(1 + vol.indexOf('/', 14))),
+            .filter(vol => vol.match(/^kubernetes.io\/(aws-ebs|gce-pd|azure-disk)\/.+/))
+            .map(vol => vol.substr(1 + vol.indexOf('/', 14)))
+            .map(vol => (vol.includes('://') ? basename(vol) : vol)),
         ...(labels['cloud.google.com/gke-preemptible'] === 'true' ? {lifecycle: 'preemptible'} : {})
     }));
     return kNodes;
@@ -60,13 +64,14 @@ async function volumes(k8sApi) {
         spec: {
             awsElasticBlockStore: {volumeID} = {},
             gcePersistentDisk: {pdName} = {},
+            azureDisk: {diskURI} = {},
             capacity: {storage},
             claimRef
         }
     }) => {
         const {name: claimName, namespace} = claimRef || {};
         return {
-            cloudId: volumeID || pdName,
+            id: basename(volumeID) || basename(pdName) || path(diskURI),
             name,
             storage,
             claim: claimName ? {name: claimName, namespace} : {}
@@ -115,25 +120,25 @@ async function pvclaims(k8sApi) {
 }
 
 function kubeKind(kcluster) {
-    const {meta: {version: {gitVersion: v = ''} = {}}} = kcluster;
-    // eslint-disable-next-line no-nested-ternary
-    const kind = v.includes('-eks-') ? 'eks' : v.includes('-gke.') ? 'gke' : 'generic';
+    const {meta: {version: {gitVersion: v = ''} = {}}, nodes: n} = kcluster;
+    const kind = v.includes('-eks-') ? 'eks' :
+        v.includes('-gke.') ? 'gke' :
+            n.some(({id}) => id.startsWith('/subscriptions/')) ? 'aks' :
+                'generic';
     return {kind};
 }
 
 function cloudProperties(kcluster) {
     const {nodes: knodes} = kcluster;
-    const regions = uniq(map(knodes, 'region'));
-    if (regions.length > 0) {
-        const [region] = regions;
-        const zones = uniq(map(knodes, 'zone'));
-        const instances = uniqBy(map(knodes, 'instance'), 'type');
-        return {region, zones, instances};
-    }
+    const regions = uniq(map(knodes, 'region').filter(r => r));
     if (regions.length !== 1) {
         console.log(`Expected cluster nodes in a single cloud region: got ${regions}`);
     }
-    return {};
+    if (regions.length === 0) return {};
+    const [region] = regions;
+    const zones = uniq(map(knodes, 'zone').filter(z => z));
+    const instances = uniqBy(map(knodes, 'instance').filter(({type}) => type), 'type');
+    return {region, zones, instances};
 }
 
 function enrich(kcluster) {

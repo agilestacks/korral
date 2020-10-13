@@ -29,4 +29,10 @@ function basename(uri) {
     return uri;
 }
 
-module.exports = {noop, dump, sleep, trimAxiosVerbosity, basename};
+function path(uri) {
+    const i = uri.indexOf('://');
+    if (i > 0 && i < uri.length - 3) return uri.substr(3 + i);
+    return uri;
+}
+
+module.exports = {noop, dump, sleep, trimAxiosVerbosity, basename, path};
