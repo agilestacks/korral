@@ -2,7 +2,7 @@ const fs = require('fs');
 const util = require('util');
 const request = require('request');
 const moment = require('moment');
-const {fromPairs, map, zip} = require('lodash');
+const {fromPairs, map, toNumber, zip} = require('lodash');
 
 async function zoneSpot(ec2, zone, instanceTypes) {
     const params = {
@@ -19,7 +19,7 @@ async function zoneSpot(ec2, zone, instanceTypes) {
         SpotPrice: price
     }) => ({
         instanceType,
-        price
+        price: toNumber(price)
     }));
     return prices;
 }
@@ -45,7 +45,7 @@ async function ondemand(region, instanceTypes) {
                 attributes: {'aws:ec2:instanceType': instanceType}
             }) => ({
                 instanceType,
-                price
+                price: toNumber(price)
             }));
         fs.writeFileSync(filename, JSON.stringify(prices));
     }
@@ -59,7 +59,7 @@ function loadLoadBalancerPrices() {
     const prices = fromPairs(regions.map(({region, types: [{values}]}) => {
         const {prices: {USD: hour}} = values.find(({rate}) => rate === 'perELBHour');
         const {prices: {USD: gigabyte}} = values.find(({rate}) => rate === 'perGBProcessed');
-        return [region, {elb: {hour, gigabyte}}];
+        return [region, {elb: {hour: toNumber(hour), gigabyte: toNumber(gigabyte)}}];
     }));
     return prices;
 }
@@ -82,7 +82,7 @@ function loadVolumePrices() {
     const prices = fromPairs(regions.map(({region, types}) => {
         const kinds = fromPairs(types.filter(({name}) => translate[name]).map(({name, values}) => {
             const {prices: {USD: gigabyte}} = values.find(({rate}) => rate === 'perGBmoProvStorage');
-            return [translate[name], gigabyte];
+            return [translate[name], toNumber(gigabyte)];
         }));
         return [region, kinds];
     }));
