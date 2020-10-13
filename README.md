@@ -7,7 +7,7 @@ The exported metrics structure adheres to Prometheus [best practices](https://pr
 1. Cluster level where cost is provided on cluster object level: node, node volumes, load-balancers, etc.;
 2. Pod level where cost is per pod and includes pod volumes. Costs that cannot be reliably attributed to a specific pod is amortized across all pods (in a namespace, on a node). For example, ingress controller load-balancer and it's egress traffic cost or node boot volume cost.
 
-In both cases, the metrics are measured in US$ per hour. The Sum of all metrics in a facet should add up to the total cluster cost, modulo rounding errors. Note that orphan volumes costs are not included in _Pod level_ facet.
+In both cases, the metrics are measured in USD per hour. The Sum of all metrics in a facet should add up to the total cluster cost, modulo rounding errors. Note that orphan volumes costs are not included in _Pod level_ facet.
 
 ### Cluster level
 
@@ -36,7 +36,7 @@ The cost model makes a few arbitrary assumptions:
 
 [install/kubernetes.yaml] configures service account with restricted privileges, installs the deployment, and Prometheus Operator [ServiceMonitor](https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/design.md) custom resource.
 
-Installed on EKS or GKE it will automatically determine cloud API to use - AWS or GCP, respectivelly. If you have your own Kubernetes flavor, please add `--cloud=aws|gcp` to deployment `args`.
+Installed on the cloud-native Kubernetes (EKS, GKE, AKS) it will automatically determine cloud API to use. If you have your own Kubernetes flavor, please add `--cloud=aws|gcp|azure` to deployment `args`.
 
 > The default scrape timeout for Prometheus is 10 seconds. If your exporter can be expected to exceed this, you should explicitly call this out in your user documentation.
 
