@@ -13,7 +13,7 @@ spec:
   - domain
   endpoints:
   - port: http
-    interval: "1m"
+    interval: "5m"
     scrapeTimeout: "20s"
   namespaceSelector:
     matchNames:
