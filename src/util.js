@@ -24,12 +24,14 @@ function trimAxiosVerbosity(error) {
 }
 
 function basename(uri) {
+    if (typeof uri !== 'string') return uri;
     const i = uri.lastIndexOf('/');
     if (i > 0 && i < uri.length - 1) return uri.substr(1 + i);
     return uri;
 }
 
 function path(uri) {
+    if (typeof uri !== 'string') return uri;
     const i = uri.indexOf('://');
     if (i > 0 && i < uri.length - 3) return uri.substr(3 + i);
     return uri;
