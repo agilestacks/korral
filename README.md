@@ -1,6 +1,6 @@
 ## Kubernetes cluster cost metrics
 
-Korral collects Kubernetes cluster cost metrics and provides them to Prometheus. Currently, on AWS and GCP.
+Korral collects Kubernetes cluster cost metrics and provides them to Prometheus. Currently, on AWS, GCP, and Azure.
 
 The exported metrics structure adheres to Prometheus [best practices](https://prometheus.io/docs/practices/naming/) where metrics are exposed on fine granularity level, then aggregation is performed in Prometheus. There are two facets though to help users write simpler queries:
 
