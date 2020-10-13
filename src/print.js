@@ -93,9 +93,12 @@ async function printPrices({opts: {cloud = 'aws', region: maybeRegion}}) {
         zones: cloud === 'aws' ? [`${region}a`, `${region}b`] :
             cloud === 'gcp' ? [`${region}-b`, `${region}-c`] :
                 ['0', '1'],
-        instanceTypes: cloud === 'aws' ? ['t3a.medium', 'm5.large'] :
-            cloud === 'gcp' ? ['n1-standard-4', 'e2-small'] : // TODO instance capacity
-                ['Standard_F4s_v2', 'Standard_F8s_v2']
+        instances: cloud === 'aws' ? [{type: 't3a.medium'}, {type: 'm5.large'}] :
+            cloud === 'gcp' ? [
+                {type: 'n1-standard-4', capacity: {cpu: 4, memory: 15}},
+                {type: 'e2-small', capacity: {cpu: 2, memory: 2}}
+            ] :
+                [{type: 'Standard_F4s_v2'}, {type: 'Standard_F8s_v2'}]
     };
     const prices = await cloudPrices[cloud](region, params);
     dump(prices);
