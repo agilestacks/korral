@@ -34,7 +34,7 @@ The cost model makes a few arbitrary assumptions:
 
 ### Installation and configuration
 
-[install/kubernetes.yaml] configures service account with restricted privileges, installs the deployment, and Prometheus Operator [ServiceMonitor](https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/design.md) custom resource.
+[install/kubernetes.yaml](https://github.com/agilestacks/korral/blob/master/install/kubernetes.yaml) configures service account with restricted privileges, installs the deployment, and Prometheus Operator [ServiceMonitor](https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/design.md) custom resource.
 
 Installed on the cloud-native Kubernetes (EKS, GKE, AKS) it will automatically determine cloud API to use. If you have your own Kubernetes flavor, please add `--cloud=aws|gcp|azure` to deployment `args`.
 
