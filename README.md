@@ -41,3 +41,5 @@ Installed on the cloud-native Kubernetes (EKS, GKE, AKS) it will automatically d
 > The default scrape timeout for Prometheus is 10 seconds. If your exporter can be expected to exceed this, you should explicitly call this out in your user documentation.
 
 Installed Prometheus `ServiceMonitor` custom resource configures the timeout to 20sec. You may want to change that.
+
+![Prometheus metrics](prometheus.png)
