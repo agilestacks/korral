@@ -54,7 +54,7 @@ async function ondemand(region, instanceTypes) {
 }
 
 // TODO not all regions are present in AWS ELB pricing file
-function loadLoadBalancerPrices() {
+function loadElbPrices() {
     const {config: {regions}} = JSON.parse(fs.readFileSync('src/prices/aws-elb.json'));
     const prices = fromPairs(regions.map(({region, types: [{values}]}) => {
         const {prices: {USD: hour}} = values.find(({rate}) => rate === 'perELBHour');
@@ -64,11 +64,12 @@ function loadLoadBalancerPrices() {
     return prices;
 }
 
-const loadBalancerPrices = loadLoadBalancerPrices();
+const elbPrices = loadElbPrices();
 
 function loadBalancer(region) {
-    return loadBalancerPrices[region] ||
-        {elb: {hour: 0.025, gigabyte: 0.008}};
+    const elb = {elb: {hour: 0.025, gigabyte: 0.008}};
+    const nlb = {nlb: {hour: 0.03, gigabyte: 0}};
+    return {...(elbPrices[region] || elb), ...nlb};
 }
 
 function loadVolumePrices() {

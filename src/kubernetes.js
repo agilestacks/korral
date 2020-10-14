@@ -52,8 +52,15 @@ async function nodes(k8sApi) {
 async function loadBalancers(k8sApi) {
     const {body: {items: n}} = await k8sApi.listServiceForAllNamespaces();
     const lbs = n.filter(({spec: {type}}) => type === 'LoadBalancer');
-    const ingress = flatMap(lbs, ({metadata: {namespace}, status}) => get(status, 'loadBalancer.ingress')
-        .map(({hostname, ip}) => ({hostname, ip, namespace, type: hostname ? 'elb' : undefined})));
+    const ingress = flatMap(lbs,
+        ({metadata: {namespace, annotations}, status}) => (get(status, 'loadBalancer.ingress') || [])
+            .map(({hostname, ip}) => ({
+                hostname, // either hostname or ip will be set
+                ip,
+                namespace,
+                type: hostname ? (annotations['service.beta.kubernetes.io/aws-load-balancer-type'] || 'elb') :
+                    undefined // GKE and AKS loadbalancers assigns IP
+            })));
     return ingress;
 }
 
