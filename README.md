@@ -12,7 +12,7 @@ In both cases, the metrics are measured in USD per hour. The Sum of all metrics 
 ### Cluster level
 
 - `korral_cluster_node_cost_per_hour_dollars` - cluster node cost without cost of attached volumes, split by `node` tag
-- `korral_cluster_node_volumes_cost_per_hour_dollars` - cluster node attached volumes cost, spilt by `node` tag ; this includes Kubernetes volumes attached to the node and node boot volume
+- `korral_cluster_node_volumes_cost_per_hour_dollars` - cluster node attached volumes cost, spilt by `node` tag; this includes Kubernetes volumes attached to the node and node boot volume
 - `korral_cluster_loadbalancer_cost_per_hour_dollars` - cluster loadbalancer cost, split by `hostname`
 - `korral_cluster_loadbalancer_taffic_cost_per_hour_dollars` - cluster loadbalancer ingress/egress traffic and LCUs cost, split by `hostname`
 - `korral_cluster_orphaned_volumes_cost_per_hour_dollars` - cluster volumes that exist but not used if any, split by `claim_namespace`, `claim` tags if corresponding PVC exists
@@ -23,7 +23,7 @@ In both cases, the metrics are measured in USD per hour. The Sum of all metrics 
 - `korral_cluster_pod_cost_per_hour_dollars` - pod cost without cost of attached volumes, split by `name`, `pod_namespace`, `node` tags
 - `korral_cluster_pod_volumes_cost_per_hour_dollars` - pod volumes cost if any, split by `name`, `pod_namespace`, `node` tags.
 
-Additionally, if `--labels=` flag is specified (the default is `pod_owner,release,app.kubernetes.io/name`), then each pod metric get the requiested labels copied from the pod. `pod_owner` is a special case - the collector will traverse Kubernetes resource hierarchy to determine top-most _controller_ resource name to assign to the label (deployment, statefulset, etc.). If no label set on the pod/deployment then '(none)' will be set as label value to simplify Prometheus queries.
+Additionally, if `--labels=` flag is specified (the default is `pod_owner,release,app.kubernetes.io/name`), then each pod metric get the requested labels copied from the pod. `pod_owner` is a special case - the collector will traverse Kubernetes resource hierarchy to determine top-most _controller_ resource name to assign to the label (name of deployment, statefulset, etc.). If no label set on the pod/deployment then '(none)' will be set as label value to simplify Prometheus queries.
 
 The cost model makes a few arbitrary assumptions:
 
