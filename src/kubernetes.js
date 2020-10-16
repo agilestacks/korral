@@ -21,7 +21,7 @@ async function meta(k8sApi) {
 async function nodes(k8sApi) {
     const {body: {items: n}} = await k8sApi.listNode();
     const kNodes = n.filter(({spec: {providerID}}) => providerID).map(({
-        metadata: {name, labels},
+        metadata: {name, labels = {}},
         spec: {providerID},
         status: {volumesInUse, capacity: {cpu, memory}}
     }) => ({
@@ -53,7 +53,7 @@ async function loadBalancers(k8sApi) {
     const {body: {items: n}} = await k8sApi.listServiceForAllNamespaces();
     const lbs = n.filter(({spec: {type}}) => type === 'LoadBalancer');
     const ingress = flatMap(lbs,
-        ({metadata: {namespace, annotations}, status}) => (get(status, 'loadBalancer.ingress') || [])
+        ({metadata: {namespace, annotations = {}}, status}) => (get(status, 'loadBalancer.ingress') || [])
             .map(({hostname, ip}) => ({
                 hostname, // either hostname or ip will be set
                 ip,
