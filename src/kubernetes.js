@@ -33,7 +33,7 @@ async function nodes({k8sApi: {core}}) {
                 labels['beta.kubernetes.io/instance-type'],
             capacity: {
                 cpu: cpuParser(cpu),
-                memory: memoryParser(memory) / (1024 * 1024 * 1024)
+                memory: Math.ceil(memoryParser(memory) / (1024 * 1024 * 1024))
             }
         },
         region: labels['topology.kubernetes.io/region'] ||
