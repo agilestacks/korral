@@ -1,25 +1,25 @@
 const util = require('util');
 const request = require('request');
-const {get, flatMap, map, uniq, uniqBy} = require('lodash');
+const {get, flatMap, fromPairs, map, pickBy, uniq, uniqBy} = require('lodash');
 const {cpuParser, memoryParser} = require('kubernetes-resource-parser');
 
 const {basename, path} = require('./util');
 
-async function meta(k8sApi) {
+async function meta({k8sApi: {core}}) {
     const opt = {
         method: 'GET',
-        baseUrl: k8sApi.basePath,
+        baseUrl: core.basePath,
         uri: '/version',
         headers: {}
     };
-    await k8sApi.authentications.default.applyToRequest(opt);
+    await core.authentications.default.applyToRequest(opt);
     const {body} = await util.promisify(request)(opt);
     const version = JSON.parse(body);
     return {version};
 }
 
-async function nodes(k8sApi) {
-    const {body: {items: n}} = await k8sApi.listNode();
+async function nodes({k8sApi: {core}}) {
+    const {body: {items: n}} = await core.listNode();
     const kNodes = n.filter(({spec: {providerID}}) => providerID).map(({
         metadata: {name, labels = {}},
         spec: {providerID},
@@ -49,8 +49,8 @@ async function nodes(k8sApi) {
     return kNodes;
 }
 
-async function loadBalancers(k8sApi) {
-    const {body: {items: n}} = await k8sApi.listServiceForAllNamespaces();
+async function loadBalancers({k8sApi: {core}}) {
+    const {body: {items: n}} = await core.listServiceForAllNamespaces();
     const lbs = n.filter(({spec: {type}}) => type === 'LoadBalancer');
     const ingress = flatMap(lbs,
         ({metadata: {namespace, annotations = {}}, status}) => (get(status, 'loadBalancer.ingress') || [])
@@ -64,8 +64,8 @@ async function loadBalancers(k8sApi) {
     return ingress;
 }
 
-async function volumes(k8sApi) {
-    const {body: {items: n}} = await k8sApi.listPersistentVolume();
+async function volumes({k8sApi: {core}}) {
+    const {body: {items: n}} = await core.listPersistentVolume();
     const kVolumes = n.map(({
         metadata: {name},
         spec: {
@@ -87,10 +87,20 @@ async function volumes(k8sApi) {
     return kVolumes;
 }
 
-async function pods(k8sApi) {
-    const {body: {items: n}} = await k8sApi.listPodForAllNamespaces();
+function copyLabels(labels, requestedLabels) {
+    const exist = pickBy(labels, (value, key) => requestedLabels.includes(key));
+    return {labels: {...fromPairs(requestedLabels.map(lbl => [lbl, '(none)'])), ...exist}};
+}
+
+function owner(refs = []) {
+    const [{apiVersion, kind, name} = {}] = refs.filter(({controller}) => controller);
+    return name ? {owner: {apiVersion, kind, name}} : null;
+}
+
+async function pods({k8sApi: {core}, labels: requestedLabels = []}) {
+    const {body: {items: n}} = await core.listPodForAllNamespaces();
     const kPods = n.map(({
-        metadata: {name, namespace},
+        metadata: {name, namespace, labels, ownerReferences},
         spec: {
             nodeName,
             containers,
@@ -100,6 +110,8 @@ async function pods(k8sApi) {
     }) => ({
         name,
         namespace,
+        ...copyLabels(labels, requestedLabels),
+        ...owner(ownerReferences),
         phase,
         nodeName,
         containers: containers
@@ -111,8 +123,8 @@ async function pods(k8sApi) {
     return kPods.filter(({phase}) => phase === 'Running');
 }
 
-async function pvclaims(k8sApi) {
-    const {body: {items: n}} = await k8sApi.listPersistentVolumeClaimForAllNamespaces();
+async function pvclaims({k8sApi: {core}}) {
+    const {body: {items: n}} = await core.listPersistentVolumeClaimForAllNamespaces();
     const kPvcs = n.map(({
         metadata: {name, namespace},
         spec: {volumeName},
@@ -124,6 +136,30 @@ async function pvclaims(k8sApi) {
         storage
     }));
     return kPvcs;
+}
+
+async function controllers({k8sApi: {core, batch, apps}, labels: requestedLabels = []}) {
+    const workloads = {
+        'batch/v1/Job': () => batch.listJobForAllNamespaces(),
+        'core/v1/ReplicationController': () => core.listReplicationControllerForAllNamespaces(),
+        'apps/v1/DaemonSet': () => apps.listDaemonSetForAllNamespaces(),
+        'apps/v1/Deployment': () => apps.listDeploymentForAllNamespaces(),
+        'apps/v1/ReplicaSet': () => apps.listReplicaSetForAllNamespaces(),
+        'apps/v1/StatefulSet': () => apps.listStatefulSetForAllNamespaces()
+    };
+    const kWorkloads = fromPairs(await Promise.all(Object.entries(workloads).map(async ([kind, getter]) => {
+        const {body: {items: n}} = await getter();
+        const objs = n.map(({
+            metadata: {name, namespace, labels, ownerReferences}
+        }) => ({
+            name,
+            namespace,
+            ...copyLabels(labels, requestedLabels),
+            ...owner(ownerReferences)
+        }));
+        return [kind, objs];
+    })));
+    return kWorkloads;
 }
 
 function kubeKind(kcluster) {
@@ -154,13 +190,25 @@ function enrich(kcluster) {
 }
 
 async function cluster(k8sApi, opts = {}) {
-    const {pods: readPods} = opts;
+    const {pods: readPods, controllers: readControllers, labels = []} = opts;
     const objs = [meta, nodes, loadBalancers, volumes];
-    if (readPods) objs.push(...[pvclaims, pods]);
-    const [kmeta, knodes, klbs, kvols, kpvcs = [], kpods = []] = await Promise.all(objs.map(getter => getter(k8sApi)));
-    const kCluster = {meta: kmeta, nodes: knodes, loadBalancers: klbs, volumes: kvols, pvclaims: kpvcs, pods: kpods};
+    const resolve = x => () => Promise.resolve(x);
+    objs.push(readPods ? pvclaims : resolve([]));
+    objs.push(readPods ? pods : resolve([]));
+    objs.push(readControllers ? controllers : resolve({}));
+    const [kmeta, knodes, klbs, kvols, kpvcs, kpods, kctrls] =
+        await Promise.all(objs.map(getter => getter({k8sApi, labels})));
+    const kCluster = {
+        meta: kmeta,
+        nodes: knodes,
+        loadBalancers: klbs,
+        volumes: kvols,
+        pvclaims: kpvcs,
+        pods: kpods,
+        controllers: kctrls
+    };
     enrich(kCluster);
     return kCluster;
 }
 
-module.exports = {cluster, meta, nodes, loadBalancers, volumes, pvclaims, pods};
+module.exports = {cluster, meta, nodes, loadBalancers, volumes, pvclaims, pods, controllers};

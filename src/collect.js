@@ -1,4 +1,4 @@
-const {map, uniq} = require('lodash');
+const {difference, map, uniq} = require('lodash');
 
 const {cluster: kCluster} = require('./kubernetes');
 const {cloud: awsCloud, services: awsServices} = require('./cloud/aws');
@@ -7,7 +7,7 @@ const {cloud: azureCloud, services: azureServices} = require('./cloud/azure');
 const {prices: awsPrices} = require('./prices/aws');
 const {prices: gcpPrices} = require('./prices/gcp');
 const {prices: azurePrices} = require('./prices/azure');
-const {join} = require('./model');
+const {join, ownerLabel} = require('./model');
 
 async function aws({cluster, cloudApi, dump}) {
     const {meta: {region, zones, instances}, loadBalancers} = cluster;
@@ -82,7 +82,12 @@ const cloudOfClusterKind = {
 };
 
 async function collect({k8sApi, cloudApi = null, dump, opts}, kopts = {}) {
-    const cluster = await kCluster(k8sApi, kopts);
+    const {labels = []} = opts;
+    const cluster = await kCluster(k8sApi, {
+        ...kopts,
+        controllers: labels.includes(ownerLabel),
+        labels: difference(labels, [ownerLabel])
+    });
     dump({cluster});
 
     const cloudKind = opts.cloud || cloudOfClusterKind[cluster.meta.kind];

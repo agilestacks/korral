@@ -1,6 +1,16 @@
 const {get, difference, flatMap, groupBy, isEmpty, mapValues, round, sum, sumBy, uniq} = require('lodash');
 const {cpuParser, memoryParser} = require('kubernetes-resource-parser');
 
+const ownerLabel = 'pod_owner';
+
+function resourceOwner(ref, controllers, ownerName = '(none)') {
+    if (isEmpty(controllers)) return null;
+    if (isEmpty(ref)) return {[ownerLabel]: ownerName};
+    const {apiVersion, kind, name: refName} = ref;
+    const {name, owner} = (controllers[`${apiVersion}/${kind}`] || []).find(({name: n}) => n === refName) || {};
+    return resourceOwner(owner, controllers, name || ownerName);
+}
+
 function join(cluster, cloud, prices) {
     // nodes
     const nodesPrices = cluster.nodes.map(({name, id: instanceId, instance: {type: instanceType}, zone, volumes}) => {
@@ -121,7 +131,7 @@ function join(cluster, cloud, prices) {
     // - pod volumes cost
     // - loadblancers cost in a namespaces divided equaly between pods in the namespace
     // - cloud cluster cost (if any) divided equaly between pods
-    const podsPrices = pods.map(({name, namespace, nodeName, resources, volumes}) => {
+    const podsPrices = pods.map(({name, namespace, labels, owner, nodeName, resources, volumes}) => {
         const {node: nodeCost = 0, nativeVolumes: nodeNativeVolumesCost = 0} =
             nodesPrices.find(({name: nn}) => nn === nodeName) || {}; // TODO Azure virtual node support?
 
@@ -151,6 +161,7 @@ function join(cluster, cloud, prices) {
         return {
             name,
             namespace,
+            labels: {...resourceOwner(owner, cluster.controllers), ...labels}, // TODO propogate owner labels
             node: nodeName,
             pod: round(podPrice, 8),
             volumes: round(podVolumesPrice, 8)
@@ -183,4 +194,4 @@ function join(cluster, cloud, prices) {
     };
 }
 
-module.exports = {join};
+module.exports = {join, ownerLabel};

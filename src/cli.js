@@ -10,7 +10,14 @@ Push cluster cost metrics to SuperHub Metrics Service:
     korral push [--interval=60] [--endpoint=https://api.superhub.io] [--key=$METRICS_API_SECRET]
 
 Export cluster cost metrics over HTTP in Prometheus format:
-    korral export [--check] [--port=9797] [--path=/metrics]
+    korral export [--check] [--port=9797] [--path=/metrics] [--labels=pod_owner,release,app.kubernetes.io/name]
+
+Asking for pod_owner label will traverse Kubernetes resource hierarchy to determine top-most controller resource
+name to assign to the label (deployment, statefulset, etc.).
+If no label exist on the pod/deployment then '(none)' will be set as label value to simplify Prometheus queries.
+
+https://helm.sh/docs/chart_best_practices/labels/
+https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/
 `);
     process.exit(code);
 }
@@ -45,10 +52,18 @@ function parseArgs() {
     return {argv, opts};
 }
 
+function postprocess(opts) {
+    const {labels = ''} = opts;
+    return {
+        ...opts,
+        labels: labels.split(',')
+    };
+}
+
 function defaultConfig({argv, opts}) {
     return {
         argv: isEmpty(argv) ? ['print'] : argv,
-        opts: {
+        opts: postprocess({
             namespaces: false,
             interval: '60',
             endpoint: process.env.HUB_API || 'https://api.superhub.io',
@@ -56,8 +71,9 @@ function defaultConfig({argv, opts}) {
             check: false,
             port: process.env.KORRAL_PORT || '9797',
             path: '/metrics',
+            labels: 'pod_owner,release,app.kubernetes.io/name',
             ...opts
-        }
+        })
     };
 }
 

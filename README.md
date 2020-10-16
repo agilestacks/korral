@@ -23,6 +23,8 @@ In both cases, the metrics are measured in USD per hour. The Sum of all metrics 
 - `korral_cluster_pod_cost_per_hour_dollars` - pod cost without cost of attached volumes, split by `name`, `pod_namespace`, `node` tags
 - `korral_cluster_pod_volumes_cost_per_hour_dollars` - pod volumes cost if any, split by `name`, `pod_namespace`, `node` tags.
 
+Additionally, if `--labels=` flag is specified (the default is `pod_owner,release,app.kubernetes.io/name`), then each pod metric get the requiested labels copied from the pod. `pod_owner` is a special case - the collector will traverse Kubernetes resource hierarchy to determine top-most _controller_ resource name to assign to the label (deployment, statefulset, etc.). If no label set on the pod/deployment then '(none)' will be set as label value to simplify Prometheus queries.
+
 The cost model makes a few arbitrary assumptions:
 
 1. A sum of pod containers `resources.requests` is used to determine pod share of node total cost. If no `requests` are available, then `limits` are used, else `{ cpu: '100m', memory: '32Mi' }`. RAM cost is 23% of instance cost; this is more or less true for AWS _General Purpose_ instance types. Thus the cost will change as pods are rescheduled.

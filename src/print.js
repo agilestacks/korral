@@ -44,7 +44,8 @@ async function print(ctx) {
 
 async function printKObjects(ctx) {
     const {k8sApi, opts: {namespaces: readPods}} = ctx;
-    const kcluster = await cluster(k8sApi, {pods: !!readPods});
+    const kcluster = await cluster(k8sApi,
+        {pods: !!readPods, controllers: !!readPods, labels: ['release', 'app.kubernetes.io/name']});
     dump(kcluster);
 }
 

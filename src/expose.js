@@ -1,7 +1,18 @@
 const http = require('http');
+const {isEmpty} = require('lodash');
 
 const {collect} = require('./collect');
 const {printTotals, printNamespaceTotals} = require('./print');
+
+// https://prometheus.io/docs/practices/naming/
+// https://prometheus.io/docs/concepts/data_model/
+
+function promLabels(labels) {
+    if (isEmpty(labels)) return '';
+    const str = Object.entries(labels)
+        .map(([key, value]) => `${key.replace(/[^a-zA-Z0-9_]/g, '_')}="${value}"`).join(',');
+    return `,${str}`;
+}
 
 /* eslint-disable max-len, implicit-arrow-linebreak */
 async function scrape(init, kopts) {
@@ -27,9 +38,11 @@ async function scrape(init, kopts) {
         ({volumePrice, namespace = 'unknown', claim = 'unknown'}) =>
             `korral_cluster_orphaned_volumes_cost_per_hour_dollars{claim_namespace="${namespace}",claim="${claim}"} ${volumePrice}`);
     const podsCost = pods.map(
-        ({name, namespace, node, pod}) => `korral_cluster_pod_cost_per_hour_dollars{name="${name}",pod_namespace="${namespace}",node="${node}"} ${pod}`);
+        ({name, namespace, node, labels, pod}) =>
+            `korral_cluster_pod_cost_per_hour_dollars{name="${name}",pod_namespace="${namespace}",node="${node}"${promLabels(labels)}} ${pod}`);
     const podVolumesCost = pods.filter(({volumes}) => volumes).map(
-        ({name, namespace, node, volumes}) => `korral_cluster_pod_volumes_cost_per_hour_dollars{name="${name}",pod_namespace="${namespace}",node="${node}"} ${volumes}`);
+        ({name, namespace, node, labels, volumes}) =>
+            `korral_cluster_pod_volumes_cost_per_hour_dollars{name="${name}",pod_namespace="${namespace}",node="${node}"${promLabels(labels)}} ${volumes}`);
 
     const prometheus = `
 # HELP korral_cluster_node_cost_dollars Cluster node cost without cost of attached volumes
