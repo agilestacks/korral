@@ -3,7 +3,7 @@ const http = require('http');
 const {collect} = require('./collect');
 const {printTotals, printNamespaceTotals} = require('./print');
 
-/* eslint-disable max-len */
+/* eslint-disable max-len, implicit-arrow-linebreak */
 async function scrape(init, kopts) {
     const ctx = await collect(init, kopts);
 
@@ -11,16 +11,21 @@ async function scrape(init, kopts) {
     const {k8s = 0} = totals;
 
     const nodesCost = nodes.map(
-        ({name, node}) => `korral_cluster_node_cost_per_hour_dollars{node="${name}"} ${node}`);
+        ({name, node}) =>
+            `korral_cluster_node_cost_per_hour_dollars{node="${name}"} ${node}`);
     const nodeVolumesCost = nodes.map(
-        ({name, allVolumes}) => `korral_cluster_node_volumes_cost_per_hour_dollars{node="${name}"} ${allVolumes}`);
+        ({name, allVolumes}) =>
+            `korral_cluster_node_volumes_cost_per_hour_dollars{node="${name}"} ${allVolumes}`);
     const lbsCost = loadBalancers.map(
-        ({hostname, loadBalancer}) => `korral_cluster_loadbalancer_cost_per_hour_dollars{hostname="${hostname}"} ${loadBalancer}`);
+        ({hostname, loadBalancer}) =>
+            `korral_cluster_loadbalancer_cost_per_hour_dollars{hostname="${hostname}"} ${loadBalancer}`);
     const lbsTrafficCost = loadBalancers.map(
-        ({hostname, traffic}) => `korral_cluster_loadbalancer_traffic_cost_per_hour_dollars{hostname="${hostname}"} ${traffic}`);
+        ({hostname, traffic}) =>
+            `korral_cluster_loadbalancer_traffic_cost_per_hour_dollars{hostname="${hostname}"} ${traffic}`);
     const k8sCost = `korral_cluster_k8s_cost_per_hour_dollars ${k8s}`;
     const orphanedVolumesCost = (orphanedVolumes.length > 0 ? orphanedVolumes : [{volumePrice: 0}]).map(
-        ({volumePrice, namespace = 'unknown', claim = 'unknown'}) => `korral_cluster_orphaned_volumes_cost_per_hour_dollars{claim_namespace="${namespace}",claim="${claim}"} ${volumePrice}`);
+        ({volumePrice, namespace = 'unknown', claim = 'unknown'}) =>
+            `korral_cluster_orphaned_volumes_cost_per_hour_dollars{claim_namespace="${namespace}",claim="${claim}"} ${volumePrice}`);
     const podsCost = pods.map(
         ({name, namespace, node, pod}) => `korral_cluster_pod_cost_per_hour_dollars{name="${name}",pod_namespace="${namespace}",node="${node}"} ${pod}`);
     const podVolumesCost = pods.filter(({volumes}) => volumes).map(
@@ -62,7 +67,7 @@ ${podVolumesCost.join('\n')}
 
     return {prometheus, ctx};
 }
-/* eslint-enable max-len */
+/* eslint-enable max-len, implicit-arrow-linebreak */
 
 async function checkScrape(init) {
     const {prometheus, ctx} = await scrape(init, {pods: true});
