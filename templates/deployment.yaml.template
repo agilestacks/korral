@@ -29,6 +29,7 @@ spec:
       - name: exporter
         image: ${component.korral.image}
         imagePullPolicy: Always
+        args: ['export', '--check', '--cloud=${cloud.kind}']
         env:
         - name: KORRAL_DOMAIN
           value: "${dns.domain}"

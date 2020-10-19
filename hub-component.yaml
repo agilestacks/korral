@@ -17,6 +17,7 @@ lifecycle:
   - kubernetes
 
 parameters:
+- name: cloud.kind
 - name: dns.domain
   env: DOMAIN_NAME
 - name: component.prometheus.name
