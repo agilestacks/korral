@@ -17,9 +17,25 @@ rules:
   - persistentvolumeclaims
   - persistentvolumes
   - pods
+  - replicationcontrollers
   - services
   verbs:
   - get
+  - list
+- apiGroups:
+  - batch
+  resources:
+  - jobs
+  verbs:
+  - list
+- apiGroups:
+  - apps
+  resources:
+  - daemonsets
+  - deployments
+  - replicasets
+  - statefulsets
+  verbs:
   - list
 ---
 apiVersion: rbac.authorization.k8s.io/v1
