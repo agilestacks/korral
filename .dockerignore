@@ -2,3 +2,5 @@
 !src
 !*.js*
 !korral
+!LICENSE
+!README*

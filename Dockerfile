@@ -6,7 +6,7 @@ RUN mkdir /app
 WORKDIR /app
 
 ENV NODE_ENV $NODE_ENV
-COPY package.json package-lock.json /app/
+COPY package.json package-lock.json LICENSE README.md /app/
 RUN npm -q install --only=prod && npm -q cache clean --force
 COPY korral /app/
 COPY src/ /app/src/
