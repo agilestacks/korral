@@ -39,10 +39,10 @@ async function scrape(init, kopts) {
             `korral_cluster_orphaned_volumes_cost_per_hour_dollars{claim_namespace="${namespace}",claim="${claim}"} ${volumePrice}`);
     const podsCost = pods.map(
         ({name, namespace, node, labels, pod}) =>
-            `korral_cluster_pod_cost_per_hour_dollars{name="${name}",pod_namespace="${namespace}",node="${node}"${promLabels(labels)}} ${pod}`);
+            `korral_cluster_pod_cost_per_hour_dollars{pod_name="${name}",pod_namespace="${namespace}",node="${node}"${promLabels(labels)}} ${pod}`);
     const podVolumesCost = pods.filter(({volumes}) => volumes).map(
         ({name, namespace, node, labels, volumes}) =>
-            `korral_cluster_pod_volumes_cost_per_hour_dollars{name="${name}",pod_namespace="${namespace}",node="${node}"${promLabels(labels)}} ${volumes}`);
+            `korral_cluster_pod_volumes_cost_per_hour_dollars{pod_name="${name}",pod_namespace="${namespace}",node="${node}"${promLabels(labels)}} ${volumes}`);
 
     const prometheus = `
 # HELP korral_cluster_node_cost_dollars Cluster node cost without cost of attached volumes
