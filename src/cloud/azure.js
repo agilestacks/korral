@@ -1,4 +1,4 @@
-const {differenceBy, flatMap, fromPairs, toPairs} = require('lodash');
+const {differenceBy, flatMap, fromPairs, groupBy, isEmpty, map, maxBy, toPairs, zip} = require('lodash');
 const {
     loginWithAuthFileWithAuthResponse,
     loginWithServicePrincipalCertificateWithAuthResponse,
@@ -66,10 +66,13 @@ function rgLc(resourceGroup) {
 }
 
 async function instances({compute}, {resourceGroup, vmsss = []}) {
-    const resps = await Promise.all(vmsss.map(
+    const vmssResps = await Promise.all(vmsss.map(vmss => compute.virtualMachineScaleSets.get(resourceGroup, vmss)));
+    const vmssPriority = fromPairs(vmssResps.map(({name, virtualMachineProfile: {priority}}) => [name, priority]));
+
+    const vmResps = await Promise.all(vmsss.map(
         vmss => compute.virtualMachineScaleSetVMs.list(resourceGroup, vmss)
     ));
-    const vms = flatMap(resps, inst => inst.map(({
+    const vms = flatMap(zip(vmsss, vmResps), ([vmss, vm]) => vm.map(({
         id,
         osProfile: {computerName: name},
         sku: {name: instanceType},
@@ -78,7 +81,7 @@ async function instances({compute}, {resourceGroup, vmsss = []}) {
         id: rgLc(id),
         name,
         instanceType,
-        lifecycle: instanceType.includes('Spot') ? 'spot' : 'ondemand',
+        lifecycle: vmssPriority[vmss] === 'Spot' ? 'spot' : 'ondemand',
         disks: [osDisk, ...dataDisks].map(({diskSizeGB, managedDisk: {id: diskId, storageAccountType}}) => (
             {id: rgLc(diskId), type: storageAccountType, size: diskSizeGB}
         ))
@@ -117,8 +120,25 @@ async function loadBalancers({network}, {resourceGroup}) {
     return lbs2;
 }
 
+async function sampleOptions({compute}) {
+    const resp = await compute.virtualMachineScaleSets.listAll();
+    const allVmsss = resp.map(({name, id}) => ({
+        name,
+        resourceGroup: (id.match(/\/resourceGroups\/([^/]+)/) || [null, ''])[1].toLowerCase()
+    }));
+    const [resourceGroup, rgVmsss] = maxBy(toPairs(groupBy(allVmsss, 'resourceGroup')), ([, arr]) => arr.length);
+    return {resourceGroup, vmsss: map(rgVmsss, 'name')};
+}
+
+async function maybeSampleOptions(apis, options) {
+    const {resourceGroup, vmsss} = options;
+    if (resourceGroup || !isEmpty(vmsss)) return;
+    Object.assign(options, await sampleOptions(apis));
+}
+
 async function cloud(apis, options = {}) {
-    // TODO fetch some {resourceGroup: '', vmsss: []} test data from the cloud for `korral cobjects`
+    await maybeSampleOptions(apis, options); // for `korral cobjects`
+
     const objs = {instances, volumes: disks, loadBalancers};
     const account = fromPairs(await Promise.all(
         toPairs(objs).map(([key, getter]) => getter(apis, options).then(r => ([key, r])))));
