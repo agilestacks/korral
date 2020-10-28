@@ -45,6 +45,7 @@ async function volumes({ec2}) {
 
 async function loadBalancers({elb, cloudwatch}, {filter = () => true} = {}) {
     const {LoadBalancerDescriptions: l} = await elb.describeLoadBalancers().promise();
+    // TODO sync with Azure and GCP 1h?
     const period = 24; // hours
     const params = {
         Namespace: 'AWS/ELB',

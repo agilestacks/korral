@@ -1,4 +1,4 @@
-const {differenceBy, flatMap, fromPairs, groupBy, isEmpty, map, maxBy, toPairs, zip} = require('lodash');
+const {differenceBy, flatMap, fromPairs, groupBy, isEmpty, map, maxBy, sumBy, toPairs, zip} = require('lodash');
 const {
     loginWithAuthFileWithAuthResponse,
     loginWithServicePrincipalCertificateWithAuthResponse,
@@ -6,12 +6,17 @@ const {
 } = require('@azure/ms-rest-nodeauth');
 const {ComputeManagementClient} = require('@azure/arm-compute');
 const {NetworkManagementClient} = require('@azure/arm-network');
+const {MonitorManagementClient} = require('@azure/arm-monitor');
+
+const {dump} = require('../util');
 
 // https://www.npmjs.com/package/@azure/ms-rest-nodeauth
 // https://docs.microsoft.com/en-us/rest/api/compute/
 // https://docs.microsoft.com/en-us/rest/api/load-balancer/
+// https://docs.microsoft.com/en-us/rest/api/monitor/metrics/list
 // https://docs.microsoft.com/en-us/javascript/api/@azure/arm-compute/computemanagementclient?view=azure-node-latest
 // https://docs.microsoft.com/en-us/javascript/api/@azure/arm-network/networkmanagementclient?view=azure-node-latest
+// https://docs.microsoft.com/en-us/javascript/api/@azure/arm-monitor/metrics?view=azure-node-latest
 
 const defaults = {
     volumeType: 'StandardSSD_LRS'
@@ -54,8 +59,9 @@ async function services() {
     const subscriptionId = envSubscriptionId || subscriptions[0].id;
     const compute = new ComputeManagementClient(credentials, subscriptionId);
     const network = new NetworkManagementClient(credentials, subscriptionId);
+    const monitor = new MonitorManagementClient(credentials, subscriptionId);
 
-    return {credentials, subscriptions, subscriptionId, compute, network, resourceGroup, region};
+    return {credentials, subscriptions, subscriptionId, compute, network, monitor, resourceGroup, region};
 }
 
 function rgLc(resourceGroup) {
@@ -102,7 +108,7 @@ async function disks({compute}, {resourceGroup}) {
     return dsks;
 }
 
-async function loadBalancers({network}, {resourceGroup}) {
+async function loadBalancers({network, monitor}, {resourceGroup}) {
     const [lbs, ips] = await Promise.all([
         network.loadBalancers.list(resourceGroup),
         network.publicIPAddresses.list(resourceGroup)
@@ -114,10 +120,23 @@ async function loadBalancers({network}, {resourceGroup}) {
     }) => frontendIPConfigurations.map(({publicIPAddress: {id: ipId}}) => ({
         id: rgLc(id),
         ipAddress: (ips.find(({id: id2}) => id2 === ipId) || {}).ipAddress,
-        type,
-        bytes: 0 // TODO
+        type
     }))).filter(({ipAddress}) => ipAddress);
-    return lbs2;
+    const lbs3 = await Promise.all(lbs2.map(async ({id, ...rest}) => {
+        // by default this returns bytes per minute for each minute in last hour
+        const {value: metricData, message: error} =
+            await monitor.metrics.list(id, {metricnames: 'ByteCount', aggregation: 'average'}).catch(({body}) => body);
+        let bytes = 0;
+        if (metricData) {
+            const [{timeseries: [{data: ts}]}] = metricData;
+            bytes = Math.floor(sumBy(ts, 'average'));
+        } else if (error) {
+            console.log(`Error getting load-balancer ${id} Monitor byte count metric:`);
+            dump({error});
+        }
+        return {id, ...rest, bytes};
+    }));
+    return lbs3;
 }
 
 async function sampleOptions({compute}) {

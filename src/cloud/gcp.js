@@ -85,7 +85,7 @@ async function loadBalancers(settings, {filter = () => true} = {}) {
                 const [{pointData}] = timeSeriesData;
                 bytes = sum(flatMap(pointData, ({values}) => values.map(({int64Value}) => toNumber(int64Value))));
             } else if (error) { // Cloud Monitoring API might not be enabled on the project
-                console.log('Error getting Cloud Monitoring forwarding rule egress metrics:');
+                console.log(`Error getting forwarding rule ${name} Cloud Monitoring egress metrics:`);
                 dump({error});
             }
             return {
