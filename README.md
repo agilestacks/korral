@@ -34,6 +34,22 @@ The cost model makes a few arbitrary assumptions:
 5. Only `Running` pods are counted.
 6. Orphan volumes costs are not attributed to any pod.
 
+### Quickstart
+
+In case you have Node.js installed, do `npm install` and then run `korral`:
+
+    ./korral print
+
+Set `KUBECONFIG` and/or supply `--context=` to change cluster. Call `./korral help` for details.
+
+If you have Docker instead, you may want to try something along these lines:
+
+    docker run --rm \
+        -v ${KUBECONFIG:-$HOME/.kube/config}:/kubeconfig -e KUBECONFIG=/kubeconfig \
+        agilestacks/korral print
+
+You must map your cloud credentials into the container, ie. `AWS_*`, `GOOGLE_APPLICATION_CREDENTIALS`, or `AZURE_*` vars. No `aws-iam-authenticator` nor AWS CLI is present in the image so for EKS it's easier to start with Node.js path.
+
 ### Installation and configuration
 
 [install/kubernetes.yaml](https://github.com/agilestacks/korral/blob/master/install/kubernetes.yaml) configures service account with restricted privileges, installs the deployment, and Prometheus Operator [ServiceMonitor](https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/design.md) custom resource.
