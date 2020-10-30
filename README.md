@@ -40,6 +40,15 @@ In case you have Node.js installed, do `npm install` and then run `korral`:
 
     ./korral print
 
+    Cluster:
+        Total:   0.19298 USD per hour
+        Nodes:   0.0459
+        Volumes: 0.02208
+                 0.00125 Kubernetes
+                 0.02082 boot
+        ELBs:    0.025
+        K8s:     0.1
+
 Set `KUBECONFIG` and/or supply `--context=` to change cluster. Call `./korral help` for details.
 
 If you have Docker instead, you may want to try something along these lines:
@@ -48,7 +57,7 @@ If you have Docker instead, you may want to try something along these lines:
         -v ${KUBECONFIG:-$HOME/.kube/config}:/kubeconfig -e KUBECONFIG=/kubeconfig \
         agilestacks/korral print
 
-You must map your cloud credentials into the container, ie. `AWS_*`, `GOOGLE_APPLICATION_CREDENTIALS`, or `AZURE_*` vars. No `aws-iam-authenticator` nor AWS CLI is present in the image so for EKS it's easier to start with Node.js path.
+You must map your cloud credentials into the container, ie. `AWS_*`, `GOOGLE_APPLICATION_CREDENTIALS`, or `AZURE_*` vars. No `aws-iam-authenticator` nor AWS CLI is present in the image so for EKS it's easier to start on Node.js path.
 
 ### Installation and configuration
 
