@@ -2,6 +2,7 @@ const axios = require('axios');
 const {flatMap, fromPairs, groupBy, map} = require('lodash');
 
 // https://docs.microsoft.com/en-us/rest/api/cost-management/retail-prices/azure-retail-prices
+// https://azure.microsoft.com/en-us/pricing/details/managed-disks/
 
 const api = axios.create({
     baseURL: 'https://prices.azure.com/api',
