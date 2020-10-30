@@ -2,7 +2,8 @@ const {differenceBy, flatMap, fromPairs, groupBy, isEmpty, map, maxBy, sumBy, to
 const {
     loginWithAuthFileWithAuthResponse,
     loginWithServicePrincipalCertificateWithAuthResponse,
-    loginWithServicePrincipalSecretWithAuthResponse
+    loginWithServicePrincipalSecretWithAuthResponse,
+    loginWithVmMSI
 } = require('@azure/ms-rest-nodeauth');
 const {ComputeManagementClient} = require('@azure/arm-compute');
 const {NetworkManagementClient} = require('@azure/arm-network');
@@ -40,9 +41,8 @@ async function auth() {
     } else if (secret) {
         creds = await loginWithServicePrincipalSecretWithAuthResponse(clientId, secret, tenantId);
     } else {
-        // TODO auth from within the Azure
-        console.log('Error: no AZURE_* OS env variables found for Azure authentication');
-        process.exit(2);
+        console.log('No AZURE_* OS env variables found for Azure authentication; trying MSI...');
+        creds = await loginWithVmMSI(); // defaults to ARM {resource: https://management.azure.com/}
     }
 
     return creds;
