@@ -34,18 +34,18 @@ spec:
         - name: KORRAL_DOMAIN
           value: "${dns.domain}"
         - name: KORRAL_PORT
-          value: "9797"
+          value: "9897"
         ports:
         - name: http
-          containerPort: 9797
+          containerPort: 9897
         readinessProbe:
           httpGet:
             path: /ping
-            port: 9797
+            port: 9897
         livenessProbe:
           httpGet:
             path: /ping
-            port: 9797
+            port: 9897
           initialDelaySeconds: 60
           periodSeconds: 60
           timeoutSeconds: 5

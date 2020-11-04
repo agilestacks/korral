@@ -87,18 +87,18 @@ spec:
         - --check
         env:
         - name: KORRAL_PORT
-          value: "9797"
+          value: "9897"
         ports:
         - name: http
-          containerPort: 9797
+          containerPort: 9897
         readinessProbe:
           httpGet:
             path: /ping
-            port: 9797
+            port: 9897
         livenessProbe:
           httpGet:
             path: /ping
-            port: 9797
+            port: 9897
           initialDelaySeconds: 60
           periodSeconds: 60
           timeoutSeconds: 5
@@ -118,8 +118,8 @@ metadata:
 spec:
   ports:
   - name: http
-    port: 9797
-    targetPort: 9797
+    port: 9897
+    targetPort: 9897
     protocol: TCP
   selector:
     app.kubernetes.io/name: korral

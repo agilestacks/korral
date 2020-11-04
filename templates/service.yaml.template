@@ -13,7 +13,7 @@ spec:
   ports:
   - name: http
     port: ${component.korral.port}
-    targetPort: 9797
+    targetPort: 9897
     protocol: TCP
   selector:
     app.kubernetes.io/name: korral

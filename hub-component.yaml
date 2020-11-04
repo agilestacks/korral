@@ -32,7 +32,7 @@ parameters:
   - name: image
     env: IMAGE
   - name: port
-    value: 9797
+    value: 9897
 
 templates:
   files:

@@ -10,7 +10,7 @@ Push cluster cost metrics to SuperHub Metrics Service:
     korral push [--interval=60] [--endpoint=https://api.superhub.io] [--key=$METRICS_API_SECRET]
 
 Export cluster cost metrics over HTTP in Prometheus format:
-    korral export [--check] [--port=9797] [--path=/metrics] [--labels=pod_owner,release,app.kubernetes.io/name]
+    korral export [--check] [--port=9897] [--path=/metrics] [--labels=pod_owner,release,app.kubernetes.io/name]
 
 Asking for pod_owner label will traverse Kubernetes resource hierarchy to determine top-most controller resource
 name to assign to the label (deployment, statefulset, etc.).
@@ -69,7 +69,7 @@ function defaultConfig({argv, opts}) {
             endpoint: process.env.HUB_API || 'https://api.superhub.io',
             key: process.env.METRICS_API_SECRET,
             check: false,
-            port: process.env.KORRAL_PORT || '9797',
+            port: process.env.KORRAL_PORT || '9897',
             path: '/metrics',
             labels: 'pod_owner,release,app.kubernetes.io/name',
             ...opts
