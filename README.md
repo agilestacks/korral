@@ -61,7 +61,10 @@ You must map your cloud credentials into the container, ie. `AWS_*`, `GOOGLE_APP
 
 ### Installation and configuration
 
-[install/kubernetes.yaml](https://github.com/agilestacks/korral/blob/master/install/kubernetes.yaml) configures service account with restricted privileges, installs the deployment, and Prometheus Operator [ServiceMonitor](https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/design.md) custom resource.
+[install/kubernetes.yaml](https://github.com/agilestacks/korral/blob/master/install/kubernetes.yaml) configures service account with restricted privileges and installs the deployment. [install/prometheus-servicemonitor.yaml] installs Prometheus Operator [ServiceMonitor](https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/design.md) custom resource.
+
+    kubectl apply -f install/kubernetes.yaml
+    kubectl apply -f install/prometheus-servicemonitor.yaml
 
 Installed on the cloud-native Kubernetes (EKS, GKE, AKS) it will automatically determine cloud API to use. If you have your own Kubernetes flavor, please add `--cloud=aws|gcp|azure` to deployment `args`.
 
@@ -76,3 +79,5 @@ Installed Prometheus `ServiceMonitor` custom resource configures the timeout to 
 For multi-cluster deployment with centralized Prometheus (operated by Prometheus Operator) you may want to use [Fiber].
 
 [Fiber]: https://github.com/agilestacks/fiber
+[install/kubernetes.yaml]: https://github.com/agilestacks/korral/blob/master/install/kubernetes.yaml
+[install/prometheus-servicemonitor.yaml]: https://github.com/agilestacks/korral/blob/master/install/prometheus-servicemonitor.yaml

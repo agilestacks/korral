@@ -1,0 +1,25 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    # edit to match Prometheus custom resource serviceMonitorSelector
+    # https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/design.md
+    release: prometheus-operator
+  name: korral
+  namespace: monitoring
+spec:
+  targetLabels:
+  - domain
+  endpoints:
+  - port: http
+    interval: "5m"
+    scrapeTimeout: "20s"
+  namespaceSelector:
+    matchNames:
+    - monitoring
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: korral
+      app.kubernetes.io/instance: korral
+      app.kubernetes.io/component: exporter
