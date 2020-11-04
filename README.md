@@ -34,7 +34,7 @@ The cost model makes a few arbitrary assumptions:
 5. Only `Running` pods are counted.
 6. Orphan volumes costs are not attributed to any pod.
 
-### Quickstart
+### Test drive
 
 In case you have Node.js installed, do `npm install` and then run `korral`:
 
@@ -70,3 +70,9 @@ Installed on the cloud-native Kubernetes (EKS, GKE, AKS) it will automatically d
 Installed Prometheus `ServiceMonitor` custom resource configures the timeout to 20sec. You may want to change that.
 
 ![Prometheus metrics](prometheus.png)
+
+### Fiber is Korral Operator
+
+For multi-cluster deployment with centralized Prometheus (operated by Prometheus Operator) you may want to use [Fiber].
+
+[Fiber]: https://github.com/agilestacks/fiber
