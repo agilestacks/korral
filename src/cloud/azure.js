@@ -1,3 +1,4 @@
+const util = require('util');
 const {differenceBy, flatMap, fromPairs, groupBy, isEmpty, map, maxBy, sumBy, toPairs, zip} = require('lodash');
 const {
     loginWithAuthFileWithAuthResponse,
@@ -41,8 +42,11 @@ async function auth() {
     } else if (secret) {
         creds = await loginWithServicePrincipalSecretWithAuthResponse(clientId, secret, tenantId);
     } else {
-        console.log('No AZURE_* OS env variables found for Azure authentication; trying MSI...');
-        creds = await loginWithVmMSI(); // defaults to ARM {resource: https://management.azure.com/}
+        // https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/how-to-use-vm-token
+        // https://github.com/Azure/ms-rest-nodeauth#msi-managed-service-identity-based-login-from-a-virtual-machine-created-in-azure
+        const options = clientId ? {clientId} : undefined;
+        console.log(`Trying MSI login${options ? ` with ${util.inspect(options)}` : ''}`);
+        creds = await loginWithVmMSI(options); // defaults to ARM {resource: https://management.azure.com/}
     }
 
     return creds;
