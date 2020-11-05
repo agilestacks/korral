@@ -23,6 +23,14 @@ rules:
   - get
   - list
 - apiGroups:
+  - ""
+  resources:
+  - services/proxy
+  resourceNames:
+  - korral:9897
+  verbs:
+  - get
+- apiGroups:
   - batch
   resources:
   - jobs
