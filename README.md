@@ -61,7 +61,7 @@ You must map your cloud credentials into the container, ie. `AWS_*`, `GOOGLE_APP
 
 ### Installation and configuration
 
-[install/kubernetes.yaml](https://github.com/agilestacks/korral/blob/master/install/kubernetes.yaml) configures service account with restricted privileges and installs the deployment. [install/prometheus-servicemonitor.yaml] installs Prometheus Operator [ServiceMonitor](https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/design.md) custom resource.
+[install/kubernetes.yaml] configures service account with restricted privileges and installs the deployment. [install/prometheus-servicemonitor.yaml] installs Prometheus Operator [ServiceMonitor] custom resource.
 
     kubectl apply -f install/kubernetes.yaml
     kubectl apply -f install/prometheus-servicemonitor.yaml
@@ -74,6 +74,12 @@ Installed Prometheus `ServiceMonitor` custom resource configures the timeout to 
 
 ![Prometheus metrics](prometheus.png)
 
+### Grafana
+
+[grafana/dashboard.json](grafana/dashboard.json) is Grafana dashboard model. In Grafana, create new dashboard, visit _Dashboard settings_, then _JSON Model_; paste the JSON and _Save Changes_.
+
+![Grafana Kubernetes cost dashboard](grafana/grafana.png)
+
 ### Fiber is Korral Operator
 
 For multi-cluster deployment with centralized Prometheus (operated by Prometheus Operator) you may want to use [Fiber].
@@ -81,3 +87,5 @@ For multi-cluster deployment with centralized Prometheus (operated by Prometheus
 [Fiber]: https://github.com/agilestacks/fiber
 [install/kubernetes.yaml]: https://github.com/agilestacks/korral/blob/master/install/kubernetes.yaml
 [install/prometheus-servicemonitor.yaml]: https://github.com/agilestacks/korral/blob/master/install/prometheus-servicemonitor.yaml
+[grafana/dashboard.json]: https://github.com/agilestacks/korral/blob/master/grafana/dashboard.json
+[ServiceMonitor]: https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/design.md
