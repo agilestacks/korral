@@ -46,7 +46,7 @@ async function auth() {
         // https://github.com/Azure/ms-rest-nodeauth#msi-managed-service-identity-based-login-from-a-virtual-machine-created-in-azure
         const options = clientId ? {clientId} : undefined;
         console.log(`Trying MSI login${options ? ` with ${util.inspect(options)}` : ''}`);
-        creds = await loginWithVmMSI(options); // defaults to ARM {resource: https://management.azure.com/}
+        creds = await loginWithVmMSI({...options, resource: 'https://management.azure.com/'});
     }
 
     return creds;
