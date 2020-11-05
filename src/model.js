@@ -44,6 +44,8 @@ function join(cluster, cloud, prices) {
 
         return {
             name,
+            instanceType,
+            lifecycle,
             total: round(nodePrice + k8sVolumesPrice + nativeVolumesPrice, 5),
             node: round(nodePrice, 5),
             allVolumes: round(k8sVolumesPrice + nativeVolumesPrice, 5),

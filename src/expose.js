@@ -22,11 +22,11 @@ async function scrape(init, kopts) {
     const {k8s = 0} = totals;
 
     const nodesCost = nodes.map(
-        ({name, node}) =>
-            `korral_cluster_node_cost_per_hour_dollars{node="${name}"} ${node}`);
+        ({name, node, instanceType, lifecycle}) =>
+            `korral_cluster_node_cost_per_hour_dollars{node="${name}",instance_type="${instanceType}",lifecycle="${lifecycle}"} ${node}`);
     const nodeVolumesCost = nodes.map(
-        ({name, allVolumes}) =>
-            `korral_cluster_node_volumes_cost_per_hour_dollars{node="${name}"} ${allVolumes}`);
+        ({name, allVolumes, instanceType, lifecycle}) =>
+            `korral_cluster_node_volumes_cost_per_hour_dollars{node="${name}",instance_type="${instanceType}",lifecycle="${lifecycle}"} ${allVolumes}`);
     const lbsCost = loadBalancers.map(
         ({hostname, loadBalancer}) =>
             `korral_cluster_loadbalancer_cost_per_hour_dollars{hostname="${hostname}"} ${loadBalancer}`);
