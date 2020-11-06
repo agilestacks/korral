@@ -16,8 +16,8 @@
     "editable": true,
     "gnetId": null,
     "graphTooltip": 0,
-    "id": null,
-    "iteration": 1604602434136,
+    "id": 31,
+    "iteration": 1604671280096,
     "links": [
       {
         "icon": "external link",
@@ -39,8 +39,8 @@
         "fill": 1,
         "fillGradient": 0,
         "gridPos": {
-          "h": 8,
-          "w": 12,
+          "h": 9,
+          "w": 8,
           "x": 0,
           "y": 0
         },
@@ -133,9 +133,9 @@
         "fill": 1,
         "fillGradient": 0,
         "gridPos": {
-          "h": 8,
-          "w": 12,
-          "x": 12,
+          "h": 9,
+          "w": 8,
+          "x": 8,
           "y": 0
         },
         "hiddenSeries": false,
@@ -227,10 +227,110 @@
         "fill": 1,
         "fillGradient": 0,
         "gridPos": {
-          "h": 10,
+          "h": 9,
+          "w": 8,
+          "x": 16,
+          "y": 0
+        },
+        "hiddenSeries": false,
+        "id": 7,
+        "legend": {
+          "avg": false,
+          "current": false,
+          "max": false,
+          "min": false,
+          "show": true,
+          "total": false,
+          "values": false
+        },
+        "lines": true,
+        "linewidth": 1,
+        "links": [],
+        "nullPointMode": "null",
+        "options": {
+          "dataLinks": []
+        },
+        "percentage": false,
+        "pluginVersion": "6.7.1",
+        "pointradius": 2,
+        "points": false,
+        "renderer": "flot",
+        "seriesOverrides": [],
+        "spaceLength": 10,
+        "stack": false,
+        "steppedLine": false,
+        "targets": [
+          {
+            "expr": "sum by (hostname) (korral_cluster_loadbalancer_cost_per_hour_dollars{domain=\"$domain\"})",
+            "format": "time_series",
+            "instant": false,
+            "interval": "",
+            "legendFormat": "{{hostname}}",
+            "refId": "A"
+          },
+          {
+            "expr": "sum by (hostname) (korral_cluster_loadbalancer_traffic_cost_per_hour_dollars{domain=\"$domain\"})",
+            "interval": "",
+            "legendFormat": "{{hostname}} traffic",
+            "refId": "B"
+          }
+        ],
+        "thresholds": [],
+        "timeFrom": null,
+        "timeRegions": [],
+        "timeShift": null,
+        "title": "Network",
+        "tooltip": {
+          "shared": true,
+          "sort": 0,
+          "value_type": "individual"
+        },
+        "type": "graph",
+        "xaxis": {
+          "buckets": null,
+          "mode": "time",
+          "name": null,
+          "show": true,
+          "values": []
+        },
+        "yaxes": [
+          {
+            "decimals": 2,
+            "format": "short",
+            "label": "USD / hour",
+            "logBase": 1,
+            "max": null,
+            "min": "0",
+            "show": true
+          },
+          {
+            "format": "short",
+            "label": null,
+            "logBase": 1,
+            "max": null,
+            "min": null,
+            "show": true
+          }
+        ],
+        "yaxis": {
+          "align": false,
+          "alignLevel": null
+        }
+      },
+      {
+        "aliasColors": {},
+        "bars": false,
+        "cacheTimeout": null,
+        "dashLength": 10,
+        "dashes": false,
+        "datasource": "Prometheus",
+        "fill": 1,
+        "fillGradient": 0,
+        "gridPos": {
+          "h": 9,
           "w": 16,
           "x": 0,
-          "y": 8
+          "y": 9
         },
         "hiddenSeries": false,
         "id": 2,
@@ -320,10 +420,10 @@
         "fill": 1,
         "fillGradient": 0,
         "gridPos": {
-          "h": 10,
+          "h": 9,
           "w": 8,
           "x": 16,
-          "y": 8
+          "y": 9
         },
         "hiddenSeries": false,
         "id": 6,
@@ -405,6 +505,7 @@
         }
       }
     ],
+    "refresh": "5m",
     "schemaVersion": 22,
     "style": "dark",
     "tags": [],
@@ -454,9 +555,9 @@
     },
     "timezone": "",
     "title": "Kushion",
-    "uid": null,
+    "uid": "XJpzE1hGz",
     "variables": {
       "list": []
     },
-    "version": 0
+    "version": 5
   }
