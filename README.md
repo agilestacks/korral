@@ -59,7 +59,7 @@ If you have Docker instead, you may want to try something along these lines:
 
 You must map your cloud credentials into the container, ie. `AWS_*`, `GOOGLE_APPLICATION_CREDENTIALS`, or `AZURE_*` vars. No `aws-iam-authenticator` nor AWS CLI is present in the image so for EKS it's easier to start on Node.js path.
 
-### Installation and configuration
+### Installation
 
 [install/kubernetes.yaml] configures service account with restricted privileges and installs the deployment. [install/prometheus-servicemonitor.yaml] installs Prometheus Operator [ServiceMonitor] custom resource.
 
@@ -72,11 +72,31 @@ Installed on the cloud-native Kubernetes (EKS, GKE, AKS) it will automatically d
 
 Installed Prometheus `ServiceMonitor` custom resource configures the timeout to 20sec. You may want to change that.
 
+#### Manual Prometheus configuration
+
+In case Prometheus is somewhere else, then use following config:
+
+```yaml
+- job_name: korral/test.dev.superhub.io
+  scrape_interval: 5m
+  scrape_timeout: 20s
+  metrics_path: /api/v1/namespaces/monitoring/services/korral:9897/proxy/metrics
+  scheme: https
+  tls_config:
+    insecure_skip_verify: true
+  bearer_token: <korral service account token>
+  static_configs:
+  - targets:
+    - 62c3ef7c6ad39c6c6f8ea17d4557f3f7.gr7.us-east-2.eks.amazonaws.com:443
+    labels:
+      domain: test.dev.superhub.io
+```
+
 ![Prometheus metrics](prometheus.png)
 
 ### Grafana
 
-[grafana/dashboard.json](grafana/dashboard.json) is Grafana dashboard model. In Grafana, create new dashboard, visit _Dashboard settings_, then _JSON Model_; paste the JSON and _Save Changes_.
+[grafana/dashboard.json](grafana/dashboard.json) is Grafana dashboard model. In Grafana, create new dashboard, visit _Dashboard settings_, then _JSON Model_; paste the JSON and _Save Changes_. Or press on `+` in sidebar and choose _Import_.
 
 ![Grafana Kubernetes cost dashboard](grafana/grafana.png)
 
