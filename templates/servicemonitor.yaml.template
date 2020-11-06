@@ -5,7 +5,7 @@ metadata:
   labels:
     # match Prometheus custom resource serviceMonitorSelector
     # https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/design.md
-    release: ${component.prometheus.name}
+    release: ${component.korral.prometheus.name}
   name: ${component.korral.name}
   namespace: ${component.korral.namespace}
 spec:

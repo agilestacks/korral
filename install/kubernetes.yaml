@@ -89,7 +89,7 @@ spec:
       containers:
       - name: exporter
         image: agilestacks/korral
-        imagePullPolicy: Always
+        # imagePullPolicy: Always
         args:
         - export
         - --check

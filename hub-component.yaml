@@ -3,9 +3,10 @@ version: 1
 kind: component
 meta:
   name: korral
+  title: Korral
   brief: Collect and export Kubernetes costs to Prometheus
   source:
-    dir: ../api
+    dir: ../korral
 
 requires:
 - kubernetes
@@ -29,6 +30,8 @@ parameters:
     env: NAMESPACE
   - name: name
     value: korral
+  - name: prometheus.name
+    value: ${component.prometheus.name}
   - name: image
     env: IMAGE
   - name: port
@@ -45,4 +48,3 @@ outputs:
   brief: Korral Prometheus exporter endpoint
   value: http://${component.korral.name}.${component.korral.namespace}.svc.cluster.local:${component.korral.port}/metrics
 - name: component.korral.prometheus.name
-  value: ${component.prometheus.name}

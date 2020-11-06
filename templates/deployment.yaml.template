@@ -28,7 +28,7 @@ spec:
       containers:
       - name: exporter
         image: ${component.korral.image}
-        imagePullPolicy: Always
+        # imagePullPolicy: Always
         args: ['export', '--check', '--cloud=${cloud.kind}']
         env:
         - name: KORRAL_DOMAIN
