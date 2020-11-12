@@ -63,6 +63,7 @@ You must map your cloud credentials into the container, ie. `AWS_*`, `GOOGLE_APP
 
 [install/kubernetes.yaml] configures service account with restricted privileges and installs the deployment. [install/prometheus-servicemonitor.yaml] installs Prometheus Operator [ServiceMonitor] custom resource.
 
+    kubect create namespace monitoring
     kubectl apply -f install/kubernetes.yaml
     kubectl apply -f install/prometheus-servicemonitor.yaml
 
@@ -103,6 +104,7 @@ In case Prometheus is somewhere else, then use following config:
 ### Fiber is Korral Operator
 
 For multi-cluster deployment with centralized Prometheus (operated by Prometheus Operator) you may want to use [Fiber].
+
 
 [Fiber]: https://github.com/agilestacks/fiber
 [install/kubernetes.yaml]: https://github.com/agilestacks/korral/blob/master/install/kubernetes.yaml
