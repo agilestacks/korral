@@ -13,8 +13,9 @@ async function services(region) {
     const conf = awsConfig({region});
     const ec2 = new aws.EC2(conf);
     const elb = new aws.ELB(conf);
+    const elbv2 = new aws.ELBv2(conf);
     const cloudwatch = new aws.CloudWatch(conf);
-    return {ec2, elb, cloudwatch};
+    return {ec2, elb, elbv2, cloudwatch};
 }
 
 async function instances({ec2}) {
@@ -43,15 +44,22 @@ async function volumes({ec2}) {
     return vols;
 }
 
-async function loadBalancers({elb, cloudwatch}, {filter = () => true} = {}) {
-    const {LoadBalancerDescriptions: l} = await elb.describeLoadBalancers().promise();
+async function loadBalancers({elb, elbv2, cloudwatch}, {filter = () => true} = {}) {
+    const [{LoadBalancerDescriptions: l}, {LoadBalancers: l2}] = await Promise.all([
+        elb.describeLoadBalancers().promise(),
+        elbv2.describeLoadBalancers().promise()
+    ]);
+
     // TODO sync with Azure and GCP 1h?
     const period = 24; // hours
+    const start = moment.utc().subtract(period, 'h').format();
+    const end = moment.utc().format();
+
     const params = {
         Namespace: 'AWS/ELB',
         MetricName: 'EstimatedProcessedBytes',
-        StartTime: moment.utc().subtract(period, 'h').format(),
-        EndTime: moment.utc().format(),
+        StartTime: start,
+        EndTime: end,
         Period: period * 3600,
         Statistics: ['Sum'],
         Unit: 'Bytes'
@@ -65,7 +73,28 @@ async function loadBalancers({elb, cloudwatch}, {filter = () => true} = {}) {
             bytes: Math.floor(sumBy(d, 'Sum') / period)
         };
     }));
-    return lbs;
+
+    const params2 = {
+        Namespace: 'AWS/NetworkELB',
+        MetricName: 'ConsumedLCUs',
+        StartTime: start,
+        EndTime: end,
+        Period: period * 3600,
+        Statistics: ['Sum'],
+        Unit: 'Count'
+    };
+    const lbs2 = await Promise.all(l2.filter(filter).map(async ({DNSName, LoadBalancerName, LoadBalancerArn: arn}) => {
+        const name = `net/${LoadBalancerName}${arn.substr(arn.lastIndexOf('/'))}`;
+        const {Datapoints: d} = await cloudwatch.getMetricStatistics(
+            {...params2, Dimensions: [{Name: 'LoadBalancer', Value: name}]}).promise();
+        return {
+            dnsName: DNSName,
+            type: 'nlb',
+            lcus: Math.floor(sumBy(d, 'Sum') / period)
+        };
+    }));
+
+    return [...lbs, ...lbs2];
 }
 
 async function cloud(apis, {filters = {}} = {}) {

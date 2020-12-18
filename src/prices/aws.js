@@ -68,7 +68,7 @@ const elbPrices = loadElbPrices();
 
 function loadBalancer(region) {
     const elb = {elb: {hour: 0.025, gigabyte: 0.008}};
-    const nlb = {nlb: {hour: 0.03, gigabyte: 0}};
+    const nlb = {nlb: {hour: 0.0225, lcu: 0.006}};
     return {...(elbPrices[region] || elb), ...nlb};
 }
 

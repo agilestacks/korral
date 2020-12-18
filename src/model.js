@@ -71,10 +71,10 @@ function join(cluster, cloud, prices) {
 
     // load-balancers
     const lbsPrices = cluster.loadBalancers.map(({hostname, ip, namespace, type: klbtype}) => {
-        const {bytes = 0, type: clbtype} = cloud.loadBalancers.find(
+        const {bytes = 0, lcus = 0, type: clbtype} = cloud.loadBalancers.find(
             ({dnsName = '', ipAddress = ''}) => dnsName === hostname || ipAddress === ip) || {};
-        const {hour: perHour = 0, gigabyte: perGB = 0} = prices.loadBalancer[clbtype || klbtype] || {};
-        const traffic = (bytes / (1024 * 1024 * 1024)) * perGB;
+        const {hour: perHour = 0, gigabyte: perGB = 0, lcu: perLCU = 0} = prices.loadBalancer[clbtype || klbtype] || {};
+        const traffic = (bytes / (1024 * 1024 * 1024)) * perGB + lcus * perLCU;
         return {
             hostname: hostname || ip,
             namespace,
