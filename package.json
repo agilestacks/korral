@@ -13,7 +13,7 @@
     "@kubernetes/client-node": "^0.12.2",
     "aws-config": "^1.4.0",
     "aws-sdk": "^2.754.0",
-    "axios": "^0.20.0",
+    "axios": "^0.21.1",
     "googleapis": "^60.0.1",
     "js-yaml": "^3.14.0",
     "kubernetes-resource-parser": "^0.1.0",
