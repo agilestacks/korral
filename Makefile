@@ -11,7 +11,7 @@ HUB_USER  ?= agilestacks
 HUB_PASS  ?= ~/.docker/agilestacks.txt
 HUB_IMAGE ?= $(HUB_USER)/korral
 
-ECR_REGISTRY ?= $(subst https://,,$(lastword $(shell aws ecr get-login --region $(AWS_DEFAULT_REGION))))
+ECR_REGISTRY ?= $(shell $(aws) sts get-caller-identity | jq -r .Account).dkr.ecr.$(AWS_DEFAULT_REGION).amazonaws.com
 ECR_IMAGE    ?= $(ECR_REGISTRY)/agilestacks/$(DOMAIN_NAME)/korral
 
 kubectl ?= kubectl --context=$(DOMAIN_NAME) --namespace=$(NAMESPACE)
@@ -25,7 +25,7 @@ build:
 .PHONY: build
 
 push:
-	$(aws) ecr get-login --region $(AWS_DEFAULT_REGION) --no-include-email | $(SHELL) -
+	$(aws) ecr get-login-password --region $(AWS_DEFAULT_REGION) | $(docker) login --username AWS --password-stdin $(ECR_REGISTRY)
 	$(docker) tag  $(HUB_IMAGE):$(IMAGE_VERSION) $(ECR_IMAGE):$(IMAGE_VERSION)
 	$(docker) tag  $(HUB_IMAGE):$(IMAGE_VERSION) $(ECR_IMAGE):latest
 	$(docker) push $(ECR_IMAGE):$(IMAGE_VERSION)

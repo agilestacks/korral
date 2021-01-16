@@ -33,7 +33,11 @@ parameters:
   - name: prometheus.name
     value: ${component.prometheus.name}
   - name: image
-    env: IMAGE
+    value: ${component.docker.registry.image}
+    env: ECR_IMAGE
+  - name: registry
+    value: ${component.docker.auth.host}
+    env: ECR_REGISTRY
   - name: port
     value: 9897
 
